@@ -1,23 +1,57 @@
 <script lang="ts">
 	import { formatPrice, formatDate } from '$lib/utils/format';
-	import { getContactHref, isPhoneContact } from '$lib/utils/contact';
+	import { getContactHref, isPhoneContact, isTelegramProfileHref } from '$lib/utils/contact';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
 	const listing = $derived(data.listing);
-	const contactHref = $derived(listing.contact ? getContactHref(listing.contact) : '#');
+	const sellerContactHref = $derived(listing.contact ? getContactHref(listing.contact) : '#');
+	const groupHref = $derived(
+		listing.telegramGroup?.username
+			? `https://t.me/${listing.telegramGroup.username.replace(/^@/, '').replace(/^https?:\/\/t\.me\//, '')}`
+			: '#'
+	);
+	const contactHref = $derived(sellerContactHref);
 	const hasValidContactHref = $derived(contactHref !== '#');
+	const canWriteSeller = $derived(isTelegramProfileHref(contactHref));
 
 	const images: string[] = $derived(listing.images && listing.images.length > 0
 		? listing.images
 		: ['https://placehold.co/800x600/1a1a2e/6a6a7a?text=No+Photo']);
 
 	let activeImage = $state(0);
+	let isLightboxOpen = $state(false);
 
 	function isPhone(contact: string): boolean {
 		return isPhoneContact(contact);
 	}
+
+	function openLightbox(index: number): void {
+		activeImage = index;
+		isLightboxOpen = true;
+	}
+
+	function closeLightbox(): void {
+		isLightboxOpen = false;
+	}
+
+	function showPrevImage(): void {
+		activeImage = (activeImage - 1 + images.length) % images.length;
+	}
+
+	function showNextImage(): void {
+		activeImage = (activeImage + 1) % images.length;
+	}
+
+	function handleKeydown(event: KeyboardEvent): void {
+		if (!isLightboxOpen) return;
+		if (event.key === 'Escape') closeLightbox();
+		if (event.key === 'ArrowLeft') showPrevImage();
+		if (event.key === 'ArrowRight') showNextImage();
+	}
 </script>
+
+<svelte:window onkeydown={handleKeydown} />
 
 <svelte:head>
 	<title>{listing.title} — {listing.city?.name} | TradeHub</title>
@@ -40,9 +74,9 @@
 		<div class="detail-grid fade-in">
 			<!-- Images -->
 			<div class="detail-images" id="listing-images">
-				<div class="main-image">
+				<button class="main-image" onclick={() => openLightbox(activeImage)} aria-label="Открыть фото на весь экран">
 					<img src={images[activeImage]} alt={listing.title} />
-				</div>
+				</button>
 				{#if images.length > 1}
 					<div class="image-thumbs">
 						{#each images as img, i}
@@ -87,31 +121,22 @@
 							<span class="attr-value">{listing.city.name}</span>
 						</div>
 					{/if}
-					{#if listing.contact}
+					{#if groupHref !== '#'}
 						<div class="attr">
-							<span class="attr-label">{isPhone(listing.contact) ? '📞 Телефон' : '💬 Контакт'}</span>
+							<span class="attr-label">💬 Объявление из группы</span>
 							<a
-								href={contactHref}
-								target={hasValidContactHref ? '_blank' : undefined}
-								rel={hasValidContactHref ? 'noopener' : undefined}
+								href={groupHref}
+								target="_blank"
+								rel="noopener"
 								class="attr-value contact-link"
-								class:disabled={!hasValidContactHref}
-								aria-disabled={!hasValidContactHref}
-								tabindex={hasValidContactHref ? undefined : -1}
 							>
-								{listing.contact}
+								{listing.telegramGroup?.title ?? listing.telegramGroup?.username}
 							</a>
-						</div>
-					{/if}
-					{#if listing.telegramGroup}
-						<div class="attr">
-							<span class="attr-label">📢 Источник</span>
-							<span class="attr-value">{listing.telegramGroup.title}</span>
 						</div>
 					{/if}
 				</div>
 
-				{#if listing.contact}
+				{#if canWriteSeller}
 					<a
 						href={contactHref}
 						target={hasValidContactHref ? '_blank' : undefined}
@@ -122,13 +147,31 @@
 						tabindex={hasValidContactHref ? undefined : -1}
 						id="contact-seller-btn"
 					>
-						{isPhone(listing.contact) ? '📞 Позвонить продавцу' : '💬 Написать продавцу'}
+						💬 Написать продавцу
 					</a>
 				{/if}
 			</div>
 		</div>
 	</div>
 </section>
+
+{#if isLightboxOpen}
+	<div class="lightbox-overlay" role="dialog" aria-modal="true" aria-label="Просмотр фото" onclick={closeLightbox}>
+		<div class="lightbox-content" onclick={(e) => e.stopPropagation()}>
+			<button class="lightbox-close" onclick={closeLightbox} aria-label="Закрыть">✕</button>
+			{#if images.length > 1}
+				<button class="lightbox-nav lightbox-prev" onclick={showPrevImage} aria-label="Предыдущее фото">‹</button>
+			{/if}
+			<img class="lightbox-image" src={images[activeImage]} alt="{listing.title} (фото {activeImage + 1})" />
+			{#if images.length > 1}
+				<button class="lightbox-nav lightbox-next" onclick={showNextImage} aria-label="Следующее фото">›</button>
+			{/if}
+			{#if images.length > 1}
+				<div class="lightbox-counter">{activeImage + 1} / {images.length}</div>
+			{/if}
+		</div>
+	</div>
+{/if}
 
 <style>
 	.listing-detail {
@@ -184,6 +227,9 @@
 		overflow: hidden;
 		background: var(--bg-secondary);
 		border: 1px solid var(--border);
+		padding: 0;
+		width: 100%;
+		cursor: zoom-in;
 	}
 
 	.main-image img {
@@ -310,5 +356,76 @@
 		margin-top: 0.5rem;
 		font-size: 1rem;
 		font-weight: 600;
+	}
+
+	.lightbox-overlay {
+		position: fixed;
+		inset: 0;
+		background: rgba(0, 0, 0, 0.9);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		z-index: 1000;
+		padding: 1rem;
+	}
+
+	.lightbox-content {
+		position: relative;
+		width: min(1200px, 100%);
+		max-height: 95vh;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.lightbox-image {
+		max-width: 100%;
+		max-height: 90vh;
+		object-fit: contain;
+		border-radius: var(--radius-md);
+	}
+
+	.lightbox-close,
+	.lightbox-nav {
+		position: absolute;
+		background: rgba(0, 0, 0, 0.45);
+		color: #fff;
+		border: 1px solid rgba(255, 255, 255, 0.25);
+		cursor: pointer;
+	}
+
+	.lightbox-close {
+		top: -0.5rem;
+		right: -0.5rem;
+		width: 2rem;
+		height: 2rem;
+		border-radius: 999px;
+	}
+
+	.lightbox-nav {
+		top: 50%;
+		transform: translateY(-50%);
+		width: 2.25rem;
+		height: 3rem;
+		font-size: 1.5rem;
+		border-radius: var(--radius-sm);
+	}
+
+	.lightbox-prev {
+		left: 0.5rem;
+	}
+
+	.lightbox-next {
+		right: 0.5rem;
+	}
+
+	.lightbox-counter {
+		position: absolute;
+		bottom: -1.75rem;
+		left: 50%;
+		transform: translateX(-50%);
+		color: #fff;
+		font-size: 0.875rem;
+		opacity: 0.85;
 	}
 </style>

@@ -91,6 +91,8 @@ export const listings = pgTable(
 		price: decimal('price', { precision: 12, scale: 2 }),
 		currency: text('currency').notNull().default('GEL'),
 		contact: text('contact'),
+		/** SHA-256 hex нормализованного title+description для поиска дублей внутри группы */
+		contentHash: text('content_hash'),
 		images: jsonb('images').$type<string[]>().default([]),
 		status: text('status').notNull().default('active'),
 		publishedAt: timestamp('published_at', { withTimezone: true }).notNull().defaultNow(),
@@ -101,7 +103,8 @@ export const listings = pgTable(
 		index('listings_city_idx').on(table.cityId),
 		index('listings_category_idx').on(table.categoryId),
 		index('listings_status_idx').on(table.status),
-		index('listings_published_idx').on(table.publishedAt)
+		index('listings_published_idx').on(table.publishedAt),
+		index('listings_group_content_hash_idx').on(table.telegramGroupId, table.contentHash)
 	]
 );
 

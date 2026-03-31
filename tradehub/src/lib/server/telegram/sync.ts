@@ -1,7 +1,8 @@
 import { scrapeMessage } from './scraper';
 import { db } from '../db';
 import { listings, telegramGroups, cities } from '../db/schema';
-import { eq, sql } from 'drizzle-orm';
+import { and, eq, sql } from 'drizzle-orm';
+import { listingContentFingerprint } from './listing-dedupe';
 import * as dotenv from 'dotenv';
 import { resolve } from 'path';
 
@@ -25,6 +26,7 @@ async function syncGroup(
 	let currentId = startId;
 	let consecutiveErrors = 0;
 	let added = 0;
+	let skippedDuplicates = 0;
 	const limit = 2000;
 
 	// Состояние текущего альбома (группы сообщений с одинаковым текстом)
@@ -83,27 +85,46 @@ async function syncGroup(
 				});
 
 				if (!existing) {
-					const inserted = await db
-						.insert(listings)
-						.values({
-							telegramMessageId: BigInt(currentId),
-							telegramGroupId: groupId,
-							cityId: cityId,
-							categoryId: parsed.extracted.categoryId || 9,
-							title: parsed.extracted.title,
-							description: parsed.extracted.description,
-							price: parsed.extracted.price,
-							currency: parsed.extracted.currency || 'GEL',
-							contact: parsed.extracted.contact,
-							images: parsed.images,
-							status: 'active',
-							publishedAt: parsed.date || new Date()
-						})
-						.returning({ id: listings.id });
+					const fingerprint = listingContentFingerprint(
+						parsed.extracted.title,
+						parsed.extracted.description
+					);
 
-					albumListingId = inserted[0]?.id ?? null;
-					added++;
-					process.stdout.write('+');
+					const duplicateByContent = await db.query.listings.findFirst({
+						where: and(
+							eq(listings.telegramGroupId, groupId),
+							eq(listings.contentHash, fingerprint)
+						)
+					});
+
+					if (duplicateByContent) {
+						skippedDuplicates++;
+						albumListingId = null;
+						process.stdout.write('d');
+					} else {
+						const inserted = await db
+							.insert(listings)
+							.values({
+								telegramMessageId: BigInt(currentId),
+								telegramGroupId: groupId,
+								cityId: cityId,
+								categoryId: parsed.extracted.categoryId || 9,
+								title: parsed.extracted.title,
+								description: parsed.extracted.description,
+								price: parsed.extracted.price,
+								currency: parsed.extracted.currency || 'GEL',
+								contact: parsed.extracted.contact,
+								contentHash: fingerprint,
+								images: parsed.images,
+								status: 'active',
+								publishedAt: parsed.date || new Date()
+							})
+							.returning({ id: listings.id });
+
+						albumListingId = inserted[0]?.id ?? null;
+						added++;
+						process.stdout.write('+');
+					}
 				} else {
 					albumListingId = existing.id;
 					process.stdout.write('.');
@@ -133,7 +154,9 @@ async function syncGroup(
 	// Сбрасываем последний альбом
 	await flushAlbum();
 
-	console.log(`\n✅ Готово. Добавлено: ${added}.`);
+	console.log(
+		`\n✅ Готово. Добавлено: ${added}. Пропущено дублей по тексту: ${skippedDuplicates}.`
+	);
 	return added;
 }
 
