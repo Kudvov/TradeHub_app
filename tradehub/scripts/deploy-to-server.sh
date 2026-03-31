@@ -7,7 +7,8 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 ARCHIVE="/tmp/tradehub-deploy.tar.gz"
-REMOTE_HOST="${DEPLOY_HOST:-kudvov@tradehub}"
+# По умолчанию внешний IP сервера; переопределение: DEPLOY_HOST=user@host ./scripts/deploy-to-server.sh
+REMOTE_HOST="${DEPLOY_HOST:-kudvov@155.212.134.183}"
 
 echo "→ Сборка архива из $ROOT ..."
 tar --exclude='tradehub/node_modules' \
