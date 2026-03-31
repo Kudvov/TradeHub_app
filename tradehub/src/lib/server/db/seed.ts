@@ -52,7 +52,8 @@ async function seed() {
 		.insert(telegramGroups)
 		.values([
 		// startMessageId: с какого ID начинать парсинг истории вниз (0 = автоопределение)
-		{ title: 'Batumi Trade Hub', username: 'BatumiTradeHub', cityId: batumiId, lastMessageId: 1, startMessageId: 9000 },
+		// startMessageId: 0 = авто верхний ID; фиксированный ID часто попадает в «мёртвую» зону удалённых сообщений
+		{ title: 'Batumi Trade Hub', username: 'BatumiTradeHub', cityId: batumiId, lastMessageId: 1, startMessageId: 0 },
 		{ title: 'Барахолка Тбилиси', username: 'tbilisi_baraholka', cityId: tbilisiId, lastMessageId: 1, startMessageId: 0 },
 		{ title: 'Тбилиси Купи-Продай', username: 'tbilisi_buy_sell', cityId: tbilisiId, lastMessageId: 1, startMessageId: 0 }
 		])

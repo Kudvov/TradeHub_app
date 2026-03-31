@@ -1,4 +1,4 @@
-import { scrapeMessage } from './scraper';
+import { scrapeMessageWithKind } from './scraper';
 import { db } from '../db';
 import { listings, telegramGroups, cities } from '../db/schema';
 import { and, eq, sql } from 'drizzle-orm';
@@ -10,7 +10,10 @@ dotenv.config({ path: resolve(process.cwd(), '.env') });
 
 // Количество подряд идущих ошибок "не найдено", после которых считаем,
 // что достигли конца истории. Сообщения иногда удаляют, поэтому 1-2 ошибки — норма.
-const MAX_CONSECUTIVE_ERRORS = 100;
+/** Для движения вверх по новым ID */
+const MAX_CONSECUTIVE_ERRORS_UP = 100;
+/** Вниз по истории много «фото без текста» и удалённых ID — нужен больший запас */
+const MAX_CONSECUTIVE_ERRORS_DOWN = 5000;
 
 async function syncGroup(
 	groupHandle: string,
@@ -28,6 +31,8 @@ async function syncGroup(
 	let added = 0;
 	let skippedDuplicates = 0;
 	const limit = 2000;
+	const maxConsecutiveErrors =
+		direction === 'down' ? MAX_CONSECUTIVE_ERRORS_DOWN : MAX_CONSECUTIVE_ERRORS_UP;
 
 	// Состояние текущего альбома (группы сообщений с одинаковым текстом)
 	let albumText: string | null = null;
@@ -49,21 +54,29 @@ async function syncGroup(
 		albumListingId = null;
 	};
 
-	while (consecutiveErrors < MAX_CONSECUTIVE_ERRORS && (direction === 'up' || added < limit)) {
+	while (consecutiveErrors < maxConsecutiveErrors && (direction === 'up' || added < limit)) {
 		if (currentId <= 0) break;
 
 		try {
 			await new Promise((r) => setTimeout(r, 800));
 
-			const parsed = await scrapeMessage(groupHandle, currentId);
-			if (!parsed) {
+			const outcome = await scrapeMessageWithKind(groupHandle, currentId);
+			if (outcome.kind === 'missing') {
 				consecutiveErrors++;
-				// Разрыв в ID — альбом закончился
 				if (consecutiveErrors >= 2) await flushAlbum();
 				direction === 'up' ? currentId++ : currentId--;
 				continue;
 			}
 
+			// Пост есть, но без текста — не расходуем лимит «дыр» (иначе 0 объявлений)
+			if (outcome.kind === 'non_listing') {
+				consecutiveErrors = 0;
+				if (albumText !== null) await flushAlbum();
+				direction === 'up' ? currentId++ : currentId--;
+				continue;
+			}
+
+			const parsed = outcome.data;
 			consecutiveErrors = 0;
 
 			const msgDateStr = parsed.date?.toDateString() ?? null;
@@ -168,11 +181,11 @@ async function syncGroup(
 async function findLatestMessageId(handle: string): Promise<number> {
 	// Начинаем с 10000 — если нет, идём вниз, если есть — вверх
 	const checkExists = async (id: number): Promise<boolean> => {
-		// Проверяем 5 соседних ID — если хоть один есть, диапазон живой
+		// Любой пост (даже только фото) — считаем ID занятым
 		for (let delta = 0; delta <= 4; delta++) {
-			const r = await scrapeMessage(handle, id + delta);
+			const o = await scrapeMessageWithKind(handle, id + delta);
 			await new Promise((res) => setTimeout(res, 300));
-			if (r) return true;
+			if (o.kind !== 'missing') return true;
 		}
 		return false;
 	};

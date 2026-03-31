@@ -117,7 +117,16 @@ function pickAuthorUsername($: cheerio.CheerioAPI, groupHandle: string): string 
 	return null;
 }
 
-export async function scrapeMessage(groupHandle: string, messageId: number): Promise<ScrapedMessage | null> {
+/** missing — нет поста / удалён; non_listing — пост есть, но без текста (фото, сервис); listing — есть текст */
+export type ScrapeOutcome =
+	| { kind: 'missing' }
+	| { kind: 'non_listing' }
+	| { kind: 'listing'; data: ScrapedMessage };
+
+export async function scrapeMessageWithKind(
+	groupHandle: string,
+	messageId: number
+): Promise<ScrapeOutcome> {
 	try {
 		const url = `https://t.me/${groupHandle}/${messageId}?embed=1`;
 		const response = await fetch(url, {
@@ -127,53 +136,61 @@ export async function scrapeMessage(groupHandle: string, messageId: number): Pro
 			}
 		});
 
-		if (!response.ok) return null;
+		if (!response.ok) return { kind: 'missing' };
 
 		const html = await response.text();
 		const $ = cheerio.load(html);
 
-		// Если сообщение не найдено или удалено, блок с ошибкой
 		if ($('.tgme_widget_message_error').length > 0) {
-			return null;
+			return { kind: 'missing' };
 		}
 
-		// Текст
+		const $msg = $('.tgme_widget_message').first();
+		if ($msg.length === 0) {
+			return { kind: 'missing' };
+		}
+
 		const textDiv = $('.tgme_widget_message_text').first();
-		// Заменяем <br> на переносы строк для корректного парсинга
 		textDiv.find('br').replaceWith('\n');
 		const text = textDiv.text().trim();
 
-		if (!text) return null; // Нет текста, не объявление
+		if (!text) {
+			// Пост на месте, но под объявление не годится — не считаем «дырой» в нумерации
+			return { kind: 'non_listing' };
+		}
 
-		// Автор — пытаемся вытащить username из нескольких блоков виджета,
-		// включая forwarded-автора и профиль по аватарке.
 		const author = pickAuthorUsername($, groupHandle);
-
-		// Дата
 		const dateAttr = $('.tgme_widget_message_date time').attr('datetime');
 		const date = dateAttr ? new Date(dateAttr) : new Date();
 
-		// Изображения (вытаскиваем background-image url)
 		const images: string[] = [];
 		$('.tgme_widget_message_photo_wrap').each((_, el) => {
 			const style = $(el).attr('style');
 			const match = style?.match(/background-image:url\('([^']+)'\)/);
 			if (match && match[1]) {
-				images.push(match[1]); // Прямая ссылка на cdn4.telesco.pe...
+				images.push(match[1]);
 			}
 		});
 
 		return {
-			id: messageId,
-			text,
-			html: textDiv.html() || '',
-			images,
-			date,
-			author,
-			extracted: extractData(text, author || undefined, groupHandle)
+			kind: 'listing',
+			data: {
+				id: messageId,
+				text,
+				html: textDiv.html() || '',
+				images,
+				date,
+				author,
+				extracted: extractData(text, author || undefined, groupHandle)
+			}
 		};
 	} catch (error) {
 		console.error(`Ошибка скрапинга ${groupHandle}/${messageId}:`, error);
-		return null;
+		return { kind: 'missing' };
 	}
+}
+
+export async function scrapeMessage(groupHandle: string, messageId: number): Promise<ScrapedMessage | null> {
+	const r = await scrapeMessageWithKind(groupHandle, messageId);
+	return r.kind === 'listing' ? r.data : null;
 }
