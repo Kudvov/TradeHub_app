@@ -11,6 +11,10 @@ export const load: LayoutServerLoad = async () => {
 		return { cities: allCities };
 	} catch (e) {
 		if (allowMockDataFallback()) {
+			console.error(
+				'[layout] Ошибка БД в dev → города из моков. Проверьте DATABASE_URL и docker. Причина:\n',
+				e
+			);
 			const { mockCities } = await import('$lib/server/db/mock-data');
 			return { cities: mockCities };
 		}

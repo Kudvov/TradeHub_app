@@ -30,6 +30,8 @@ export const load: PageServerLoad = async ({ params }) => {
 			error(503, 'База данных недоступна.');
 		}
 
+		console.error('[listing] Ошибка БД в dev → мок. Причина:\n', e);
+
 		const { mockListings } = await import('$lib/server/db/mock-data');
 		const listing = mockListings.find((l) => l.id === id);
 		if (!listing) throw error(404, 'Объявление не найдено');

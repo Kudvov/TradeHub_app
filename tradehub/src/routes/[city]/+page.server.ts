@@ -63,6 +63,11 @@ export const load: PageServerLoad = async ({ params, url }) => {
 			error(503, 'База данных недоступна.');
 		}
 
+		console.error(
+			'[city] Ошибка БД в dev → показываем тестовые объявления. Исправь подключение или смотри ниже:\n',
+			e
+		);
+
 		// Dev-only: mock data без PostgreSQL
 		const { mockCities, mockCategories, mockListings } = await import('$lib/server/db/mock-data');
 		const city = mockCities.find((c) => c.slug === citySlug);
