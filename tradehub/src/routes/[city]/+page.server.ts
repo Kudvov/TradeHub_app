@@ -1,5 +1,6 @@
 import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
+import { allowMockDataFallback } from '$lib/server/allow-mock';
 
 export const load: PageServerLoad = async ({ params, url }) => {
 	const citySlug = params.city;
@@ -57,7 +58,12 @@ export const load: PageServerLoad = async ({ params, url }) => {
 		// If it's an HTTP error from SvelteKit, re-throw
 		if (e && typeof e === 'object' && 'status' in e) throw e;
 
-		// Fallback to mock data
+		if (!allowMockDataFallback()) {
+			console.error('[city] database error', e);
+			error(503, 'База данных недоступна.');
+		}
+
+		// Dev-only: mock data без PostgreSQL
 		const { mockCities, mockCategories, mockListings } = await import('$lib/server/db/mock-data');
 		const city = mockCities.find((c) => c.slug === citySlug);
 		if (!city) throw error(404, 'Город не найден');

@@ -1,5 +1,6 @@
 import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
+import { allowMockDataFallback } from '$lib/server/allow-mock';
 
 export const load: PageServerLoad = async ({ params }) => {
 	const id = parseInt(params.id);
@@ -24,7 +25,11 @@ export const load: PageServerLoad = async ({ params }) => {
 	} catch (e: unknown) {
 		if (e && typeof e === 'object' && 'status' in e) throw e;
 
-		// Fallback to mock data
+		if (!allowMockDataFallback()) {
+			console.error('[listing] database error', e);
+			error(503, 'База данных недоступна.');
+		}
+
 		const { mockListings } = await import('$lib/server/db/mock-data');
 		const listing = mockListings.find((l) => l.id === id);
 		if (!listing) throw error(404, 'Объявление не найдено');

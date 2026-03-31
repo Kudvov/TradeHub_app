@@ -16,6 +16,24 @@ if 'ADMIN_KEY=' not in text:
 PY
 npm install
 npm run build
+
+# Схема БД (если DATABASE_URL в .env корректен)
+if grep -qE '^DATABASE_URL=(postgres|postgresql)://' .env 2>/dev/null; then
+	npm run db:push || echo "⚠ db:push не выполнен — проверьте БД и запустите вручную: cd /opt/tradehub && npm run db:push"
+fi
+
+# Парсер Telegram: systemd timer (каждые ~30 мин после предыдущего запуска)
+if [ -f deploy/systemd/tradehub-parser.service ]; then
+	install -m 644 deploy/systemd/tradehub-parser.service /etc/systemd/system/
+	install -m 644 deploy/systemd/tradehub-parser.timer /etc/systemd/system/
+	systemctl daemon-reload
+	systemctl enable tradehub-parser.timer
+	systemctl restart tradehub-parser.timer
+	echo "→ tradehub-parser.timer:"
+	systemctl is-active tradehub-parser.timer || true
+	systemctl is-enabled tradehub-parser.timer || true
+fi
+
 systemctl restart tradehub
 sleep 2
 systemctl is-active tradehub

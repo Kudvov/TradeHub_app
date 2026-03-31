@@ -1,4 +1,6 @@
+import { error } from '@sveltejs/kit';
 import type { LayoutServerLoad } from './$types';
+import { allowMockDataFallback } from '$lib/server/allow-mock';
 
 export const load: LayoutServerLoad = async () => {
 	try {
@@ -7,9 +9,12 @@ export const load: LayoutServerLoad = async () => {
 		const { asc } = await import('drizzle-orm');
 		const allCities = await db.select().from(cities).orderBy(asc(cities.name));
 		return { cities: allCities };
-	} catch {
-		// Fallback to mock data when DB is not available
-		const { mockCities } = await import('$lib/server/db/mock-data');
-		return { cities: mockCities };
+	} catch (e) {
+		if (allowMockDataFallback()) {
+			const { mockCities } = await import('$lib/server/db/mock-data');
+			return { cities: mockCities };
+		}
+		console.error('[layout] database unavailable', e);
+		error(503, 'База данных недоступна. Проверьте DATABASE_URL на сервере.');
 	}
 };
