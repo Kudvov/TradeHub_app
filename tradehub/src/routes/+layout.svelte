@@ -38,34 +38,62 @@
 	<title>TradeHub — Объявления из Telegram</title>
 </svelte:head>
 
-<Header cities={data.cities} />
+<div class="app-root" class:app-root--home={$page.url.pathname === '/'}>
+	<Header cities={data.cities} />
 
-<div class="layout-search-sticky">
-	<div class="container layout-search-inner">
-		<SearchBar value={searchBarValue} placeholder={searchPlaceholder} onSearch={handleLayoutSearch} />
-	</div>
+	{#if $page.url.pathname !== '/'}
+		<div class="layout-search-sticky">
+			<div class="container layout-search-inner">
+				<SearchBar value={searchBarValue} placeholder={searchPlaceholder} onSearch={handleLayoutSearch} />
+			</div>
+		</div>
+	{/if}
+
+	<main class="main-content" class:main-content--home={$page.url.pathname === '/'}>
+		{@render children()}
+	</main>
+
+	{#if $page.url.pathname === '/'}
+		<footer class="footer-home">
+			<div class="container footer-home-inner">
+				<span class="footer-home-copy">© {new Date().getFullYear()} TradeHub</span>
+				<span class="footer-home-sep" aria-hidden="true">·</span>
+				{#each data.cities as city, i (city.id)}
+					<a href="/{city.slug}" class="footer-home-link">{city.name}</a>{#if i < data.cities.length - 1}<span class="footer-home-sep" aria-hidden="true">·</span>{/if}
+				{/each}
+			</div>
+		</footer>
+	{:else}
+		<footer class="footer">
+			<div class="container footer-inner">
+				<div class="footer-brand">
+					<span class="footer-logo">Trade<span class="footer-logo-muted">Hub</span></span>
+					<p class="text-sm text-muted">Объявления из Telegram-барахолок</p>
+				</div>
+				<div class="footer-links">
+					{#each data.cities as city (city.id)}
+						<a href="/{city.slug}" class="footer-link">{city.name}</a>
+					{/each}
+				</div>
+				<p class="footer-copy text-xs text-muted">© {new Date().getFullYear()} TradeHub. Данные из открытых Telegram-групп.</p>
+			</div>
+		</footer>
+	{/if}
 </div>
 
-<main class="main-content">
-	{@render children()}
-</main>
-
-<footer class="footer">
-	<div class="container footer-inner">
-		<div class="footer-brand">
-			<span class="footer-logo">Trade<span class="footer-logo-muted">Hub</span></span>
-			<p class="text-sm text-muted">Объявления из Telegram-барахолок</p>
-		</div>
-		<div class="footer-links">
-			{#each data.cities as city (city.id)}
-				<a href="/{city.slug}" class="footer-link">{city.name}</a>
-			{/each}
-		</div>
-		<p class="footer-copy text-xs text-muted">© {new Date().getFullYear()} TradeHub. Данные из открытых Telegram-групп.</p>
-	</div>
-</footer>
-
 <style>
+	.app-root {
+		min-height: 100dvh;
+		display: flex;
+		flex-direction: column;
+	}
+
+	.app-root--home {
+		height: 100dvh;
+		max-height: 100dvh;
+		overflow: hidden;
+	}
+
 	.layout-search-sticky {
 		position: sticky;
 		top: 64px;
@@ -83,6 +111,49 @@
 		position: relative;
 		z-index: 1;
 		min-height: calc(100dvh - 64px - 200px);
+	}
+
+	.main-content--home {
+		flex: 1;
+		min-height: 0;
+		display: flex;
+		flex-direction: column;
+		overflow: hidden;
+	}
+
+	.footer-home {
+		flex-shrink: 0;
+		padding: 0.35rem 0 calc(0.5rem + env(safe-area-inset-bottom, 0px));
+		background: var(--bg-primary);
+		border-top: none;
+	}
+
+	.footer-home-inner {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		justify-content: center;
+		gap: 0.35rem 0.5rem;
+		font-size: 0.75rem;
+		color: var(--text-muted);
+	}
+
+	.footer-home-copy {
+		white-space: nowrap;
+	}
+
+	.footer-home-sep {
+		opacity: 0.45;
+		user-select: none;
+	}
+
+	.footer-home-link {
+		color: var(--text-secondary);
+		white-space: nowrap;
+	}
+
+	.footer-home-link:hover {
+		color: var(--accent);
 	}
 
 	.footer {

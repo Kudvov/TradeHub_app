@@ -27,6 +27,9 @@
 				>
 					{city.name}
 					<span class="city-count" title="Активных объявлений в городе">{(city.listingsCount ?? 0).toLocaleString('ru-RU')}</span>
+					{#if city.newCount > 0}
+						<span class="city-new" title="Новых объявлений за последние 24 часа">+{city.newCount} за 24ч</span>
+					{/if}
 				</a>
 			{/each}
 		</nav>
@@ -87,8 +90,8 @@
 	.city-pill {
 		display: inline-flex;
 		align-items: center;
-		gap: 0.375rem;
-		padding: 0.375rem 0.75rem;
+		gap: 0.35rem;
+		padding: 0.375rem 0.65rem;
 		border-radius: var(--radius-md);
 		font-size: 0.8125rem;
 		font-weight: 500;
@@ -98,6 +101,7 @@
 		transition: border-color var(--transition-fast), color var(--transition-fast);
 		text-decoration: none;
 		white-space: nowrap;
+		flex-wrap: nowrap;
 	}
 
 	.city-pill:hover {
@@ -116,14 +120,22 @@
 		align-items: center;
 		justify-content: center;
 		min-width: 1.125rem;
-		height: 1.125rem;
-		padding: 0 0.25rem;
+		min-height: 1.125rem;
+		padding: 0 0.3rem;
 		background: var(--accent-subtle);
 		color: var(--text-secondary);
 		font-size: 0.6875rem;
 		font-weight: 600;
 		border-radius: var(--radius-sm);
 		line-height: 1;
+	}
+
+	.city-new {
+		font-size: 0.625rem;
+		font-weight: 500;
+		color: var(--text-muted);
+		letter-spacing: -0.02em;
+		white-space: nowrap;
 	}
 
 	.header-actions {
