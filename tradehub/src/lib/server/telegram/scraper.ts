@@ -1,5 +1,6 @@
 import * as cheerio from 'cheerio';
 import { extractData } from './extractor';
+import { findStopWord } from './stop-words';
 
 export interface ScrapedMessage {
 	id: number;
@@ -156,6 +157,11 @@ export async function scrapeMessageWithKind(
 
 		if (!text) {
 			// Пост на месте, но под объявление не годится — не считаем «дырой» в нумерации
+			return { kind: 'non_listing' };
+		}
+
+		// Отсекаем спам/запрещённые тематики до вставки в БД.
+		if (findStopWord(text)) {
 			return { kind: 'non_listing' };
 		}
 

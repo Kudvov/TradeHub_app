@@ -7,7 +7,7 @@
 		"dev": "vite dev",
 		"build": "vite build",
 		"preview": "vite preview",
-		"test": "tsx --test src/lib/utils/contact.test.ts src/lib/server/telegram/extractor.test.ts src/lib/server/telegram/listing-dedupe.test.ts",
+		"test": "tsx --test src/lib/utils/contact.test.ts src/lib/server/telegram/extractor.test.ts src/lib/server/telegram/listing-dedupe.test.ts src/lib/server/telegram/stop-words.test.ts",
 		"prepare": "svelte-kit sync || echo ''",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
@@ -23,7 +23,8 @@
 		"db:studio": "drizzle-kit studio",
 		"parser:sync": "tsx src/lib/server/telegram/sync.ts",
 		"parser:test": "tsx src/lib/server/telegram/test.ts",
-		"parser:fix-contacts": "tsx src/lib/server/telegram/fix-contacts.ts"
+		"parser:fix-contacts": "tsx src/lib/server/telegram/fix-contacts.ts",
+		"parser:reparse": "tsx src/lib/server/telegram/reparse-listings.ts"
 	},
 	"devDependencies": {
 		"@eslint/compat": "^2.0.3",

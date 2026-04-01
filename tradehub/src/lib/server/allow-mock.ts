@@ -1,9 +1,7 @@
-import { dev } from '$app/environment';
-
 /**
- * Мок-данные в dev, если БД недоступна (удобно без Docker).
- * Чтобы видеть ошибку вместо моков: в .env задайте DEV_ALLOW_MOCK=0
+ * Мок-данные отключены. При недоступности БД сервер вернёт 503.
+ * Для локальной разработки поднимите БД через docker compose up -d.
  */
 export function allowMockDataFallback(): boolean {
-	return dev && process.env.DEV_ALLOW_MOCK !== '0';
+	return false;
 }

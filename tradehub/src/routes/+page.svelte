@@ -1,15 +1,7 @@
 <script lang="ts">
-	import CitySelector from '$lib/components/CitySelector.svelte';
-	import SearchBar from '$lib/components/SearchBar.svelte';
 	import type { LayoutData } from './$types';
 
 	let { data }: { data: LayoutData } = $props();
-
-	function handleSearch(query: string) {
-		if (query.trim()) {
-			window.location.href = `/${data.cities[0]?.slug ?? 'tbilisi'}?q=${encodeURIComponent(query)}`;
-		}
-	}
 </script>
 
 <svelte:head>
@@ -19,115 +11,91 @@
 
 <section class="hero">
 	<div class="container hero-content fade-in">
-		<div class="hero-badge badge">
-			<span>⚡</span> Агрегатор из Telegram
-		</div>
 		<h1 class="hero-title">
-			Найди лучшее в
-			<span class="text-gradient">своём городе</span>
+			Объявления рядом — в <span class="hero-title-accent">одном месте</span>
 		</h1>
 		<p class="hero-subtitle">
-			Объявления из Telegram-барахолок в одном месте. Электроника, одежда, авто, мебель — всё, что продают рядом с тобой.
+			Телеграм-барахолки Батуми и Тбилиси: без лишнего шума, только поиск и фильтры.
 		</p>
-		<div class="hero-search">
-			<SearchBar placeholder="Что ищешь? iPhone, велосипед, диван..." onSearch={handleSearch} />
-		</div>
-		<div class="hero-stats">
+		<div class="hero-cities">
 			{#each data.cities as city (city.id)}
-				{#if city.listingsCount > 0}
-					<span class="stat-item">{city.name}: <strong>{city.listingsCount}</strong></span>
-				{/if}
+				<a href="/{city.slug}" class="hero-city-btn">
+					{city.name}
+					{#if city.newCount > 0}
+						<span class="hero-city-new">+{city.newCount} за 24ч</span>
+					{/if}
+				</a>
 			{/each}
 		</div>
-	</div>
-	<div class="hero-glow"></div>
-</section>
-
-<section class="cities-section">
-	<div class="container">
-		<h2 class="section-title">Выбери город</h2>
-		<CitySelector cities={data.cities} />
 	</div>
 </section>
 
 <style>
 	.hero {
 		position: relative;
-		padding: 4rem 0 3rem;
-		overflow: hidden;
+		padding: 3rem 0 4rem;
 	}
 
 	.hero-content {
-		position: relative;
-		z-index: 2;
 		display: flex;
 		flex-direction: column;
 		align-items: center;
 		text-align: center;
-		gap: 1.25rem;
-		max-width: 640px;
+		gap: 1rem;
+		max-width: 28rem;
 		margin: 0 auto;
 	}
 
-	.hero-badge {
-		font-size: 0.8125rem;
+	.hero-title {
+		font-size: clamp(1.5rem, 4vw, 2rem);
+		font-weight: 600;
+		line-height: 1.25;
+		letter-spacing: -0.02em;
+		color: var(--text-primary);
 	}
 
-	.hero-title {
-		font-size: clamp(2rem, 5vw, 3rem);
-		font-weight: 800;
-		line-height: 1.15;
-		letter-spacing: -0.03em;
-		color: var(--text-primary);
+	.hero-title-accent {
+		color: var(--text-muted);
+		font-weight: 500;
 	}
 
 	.hero-subtitle {
-		font-size: 1.0625rem;
+		font-size: 0.9375rem;
 		color: var(--text-secondary);
-		line-height: 1.6;
-		max-width: 520px;
+		line-height: 1.55;
+		max-width: 24rem;
 	}
 
-	.hero-search {
-		width: 100%;
+	.hero-cities {
 		display: flex;
-		justify-content: center;
-		margin-top: 0.5rem;
-	}
-
-	.hero-stats {
-		display: flex;
+		gap: 0.75rem;
 		flex-wrap: wrap;
-		gap: 1rem;
 		justify-content: center;
-		font-size: 0.8125rem;
-		color: var(--text-muted);
+		margin-top: 0.25rem;
 	}
 
-	.stat-item strong {
-		color: var(--text-secondary);
-	}
-
-	.hero-glow {
-		position: absolute;
-		top: -40%;
-		left: 50%;
-		transform: translateX(-50%);
-		width: 600px;
-		height: 600px;
-		background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
-		pointer-events: none;
-		z-index: 0;
-	}
-
-	.cities-section {
-		padding: 2rem 0 4rem;
-	}
-
-	.section-title {
-		font-size: 1.375rem;
-		font-weight: 700;
-		margin-bottom: 1.5rem;
+	.hero-city-btn {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.5rem;
+		padding: 0.5rem 1rem;
+		background: var(--bg-card);
+		border: 1px solid var(--border);
+		border-radius: var(--radius-md);
+		font-size: 0.875rem;
+		font-weight: 500;
 		color: var(--text-primary);
+		text-decoration: none;
+		transition: border-color var(--transition-fast);
+	}
+
+	.hero-city-btn:hover {
+		border-color: var(--border-hover);
+	}
+
+	.hero-city-new {
+		font-size: 0.6875rem;
+		font-weight: 500;
+		color: var(--text-muted);
 	}
 </style>

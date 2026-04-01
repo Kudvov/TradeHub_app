@@ -1,31 +1,40 @@
 <script lang="ts">
 	import ThemeToggle from './ThemeToggle.svelte';
+	import { page } from '$app/stores';
 
-	let { currentCity = '' }: { currentCity?: string } = $props();
+	let {
+		cities = []
+	}: {
+		cities: Array<{ id: number; name: string; slug: string; newCount: number; listingsCount?: number }>;
+	} = $props();
+
+	let currentSlug = $derived($page.url.pathname.split('/').filter(Boolean)[0] ?? '');
 </script>
 
 <header class="header">
 	<div class="container header-inner">
 		<a href="/" class="logo" id="header-logo">
-			<span class="logo-icon">⚡</span>
 			<span class="logo-text">Trade<span class="logo-accent">Hub</span></span>
 		</a>
 
 		<nav class="header-nav" id="header-nav">
-			{#if currentCity}
-				<a href="/" class="nav-link" id="nav-all-cities">
-					<span class="nav-icon">🏙</span>
-					Все города
+			{#each cities as city (city.id)}
+				<a
+					href="/{city.slug}"
+					class="city-pill"
+					class:active={currentSlug === city.slug}
+					aria-current={currentSlug === city.slug ? 'page' : undefined}
+				>
+					{city.name}
+					{#if (city.listingsCount ?? 0) > 0}
+						<span class="city-count" title="Активных объявлений">{city.listingsCount}</span>
+					{/if}
 				</a>
-			{/if}
+			{/each}
 		</nav>
 
 		<div class="header-actions">
 			<ThemeToggle />
-			<span class="badge badge-success" id="header-status">
-				<span class="status-dot"></span>
-				Online
-			</span>
 		</div>
 	</div>
 </header>
@@ -36,7 +45,7 @@
 		top: 0;
 		z-index: 100;
 		background: var(--header-glass);
-		backdrop-filter: blur(16px) saturate(180%);
+		backdrop-filter: blur(8px);
 		border-bottom: 1px solid var(--border);
 		transition: background var(--transition-base);
 	}
@@ -52,74 +61,96 @@
 	.logo {
 		display: flex;
 		align-items: center;
-		gap: 0.5rem;
 		text-decoration: none;
 		color: var(--text-primary);
-		font-weight: 700;
-		font-size: 1.25rem;
+		font-weight: 600;
+		font-size: 1.0625rem;
 		letter-spacing: -0.02em;
+		flex-shrink: 0;
 	}
 
 	.logo:hover {
 		color: var(--text-primary);
 	}
 
-	.logo-icon {
-		font-size: 1.5rem;
-		filter: drop-shadow(0 0 6px var(--accent-glow));
-	}
-
 	.logo-accent {
-		background: linear-gradient(135deg, var(--accent), #3bb0ff);
-		-webkit-background-clip: text;
-		-webkit-text-fill-color: transparent;
-		background-clip: text;
+		font-weight: 500;
+		color: var(--text-muted);
 	}
 
 	.header-nav {
 		display: flex;
 		align-items: center;
-		gap: 0.5rem;
+		gap: 0.375rem;
+		flex: 1;
+		justify-content: center;
+		min-width: 0;
 	}
 
-	.nav-link {
-		display: flex;
+	.city-pill {
+		display: inline-flex;
 		align-items: center;
 		gap: 0.375rem;
-		padding: 0.5rem 0.875rem;
+		padding: 0.375rem 0.75rem;
 		border-radius: var(--radius-md);
-		font-size: 0.875rem;
+		font-size: 0.8125rem;
 		font-weight: 500;
 		color: var(--text-secondary);
-		transition: all var(--transition-fast);
+		border: 1px solid var(--border);
+		background: transparent;
+		transition: border-color var(--transition-fast), color var(--transition-fast);
+		text-decoration: none;
+		white-space: nowrap;
 	}
 
-	.nav-link:hover {
+	.city-pill:hover {
+		color: var(--text-primary);
+		border-color: var(--border-hover);
+	}
+
+	.city-pill.active {
+		color: var(--text-primary);
+		border-color: var(--text-primary);
+		font-weight: 600;
+	}
+
+	.city-count {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		min-width: 1.125rem;
+		height: 1.125rem;
+		padding: 0 0.25rem;
 		background: var(--accent-subtle);
-		color: var(--accent);
-	}
-
-	.nav-icon {
-		font-size: 1rem;
+		color: var(--text-secondary);
+		font-size: 0.6875rem;
+		font-weight: 600;
+		border-radius: var(--radius-sm);
+		line-height: 1;
 	}
 
 	.header-actions {
 		display: flex;
 		align-items: center;
-		gap: 0.75rem;
+		gap: 0.5rem;
+		flex-shrink: 0;
 	}
 
-	.status-dot {
-		width: 6px;
-		height: 6px;
-		border-radius: 50%;
-		background: var(--success);
-		box-shadow: 0 0 6px var(--success);
-		animation: pulse 2s ease-in-out infinite;
-	}
+	@media (max-width: 480px) {
+		.header-inner {
+			gap: 0.5rem;
+		}
 
-	@keyframes pulse {
-		0%, 100% { opacity: 1; }
-		50% { opacity: 0.5; }
+		.header-nav {
+			justify-content: flex-start;
+			overflow-x: auto;
+			scrollbar-width: none;
+			-ms-overflow-style: none;
+		}
+
+		.header-nav::-webkit-scrollbar {
+			display: none;
+		}
+
 	}
 </style>

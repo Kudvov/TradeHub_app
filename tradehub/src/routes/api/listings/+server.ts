@@ -1,7 +1,7 @@
 import { json } from '@sveltejs/kit';
 import { db } from '$lib/server/db';
 import { listings, cities, categories } from '$lib/server/db/schema';
-import { eq, and, ilike, sql, desc, count } from 'drizzle-orm';
+import { eq, and, ilike, sql, desc, count, gte } from 'drizzle-orm';
 import type { RequestHandler } from './$types';
 
 export const GET: RequestHandler = async ({ url }) => {
@@ -12,8 +12,9 @@ export const GET: RequestHandler = async ({ url }) => {
 	const limit = Math.min(50, Math.max(1, parseInt(url.searchParams.get('limit') ?? '20')));
 	const offset = (page - 1) * limit;
 
+	const since90d = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
 	// Build conditions
-	const conditions = [eq(listings.status, 'active')];
+	const conditions = [eq(listings.status, 'active'), gte(listings.publishedAt, since90d)];
 
 	if (citySlug) {
 		const city = await db.select().from(cities).where(eq(cities.slug, citySlug)).limit(1);

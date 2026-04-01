@@ -108,7 +108,33 @@ export const listings = pgTable(
 	]
 );
 
-export const listingsRelations = relations(listings, ({ one }) => ({
+export const listingReports = pgTable(
+	'listing_reports',
+	{
+		id: serial('id').primaryKey(),
+		listingId: integer('listing_id')
+			.notNull()
+			.references(() => listings.id, { onDelete: 'cascade' }),
+		reason: text('reason').notNull(),
+		details: text('details'),
+		status: text('status').notNull().default('open'),
+		createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow()
+	},
+	(table) => [index('listing_reports_listing_idx').on(table.listingId), index('listing_reports_status_idx').on(table.status)]
+);
+
+export const bannedAuthors = pgTable(
+	'banned_authors',
+	{
+		id: serial('id').primaryKey(),
+		contact: text('contact').notNull().unique(),
+		reason: text('reason'),
+		createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow()
+	},
+	(table) => [index('banned_authors_contact_idx').on(table.contact)]
+);
+
+export const listingsRelations = relations(listings, ({ one, many }) => ({
 	city: one(cities, {
 		fields: [listings.cityId],
 		references: [cities.id]
@@ -120,5 +146,13 @@ export const listingsRelations = relations(listings, ({ one }) => ({
 	category: one(categories, {
 		fields: [listings.categoryId],
 		references: [categories.id]
+	}),
+	reports: many(listingReports)
+}));
+
+export const listingReportsRelations = relations(listingReports, ({ one }) => ({
+	listing: one(listings, {
+		fields: [listingReports.listingId],
+		references: [listings.id]
 	})
 }));

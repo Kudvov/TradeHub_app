@@ -106,7 +106,15 @@ npm run db:push
 systemctl restart tradehub.service
 ```
 
-**С Mac (архив):** как раньше `./tradehub/scripts/deploy-to-server.sh` — скрипт `remote-deploy.sh` на сервере **сохраняет** старый `.env` в `/root/tradehub.env.backup` перед распаковкой.
+**С Mac (архив):** `./tradehub/scripts/deploy-to-server.sh` — `remote-deploy.sh` на сервере **сохраняет** старый `.env` в `/root/tradehub.env.backup` перед распаковкой.
+
+**SSH по ключу (удобно для Cursor / CI, без пароля):**
+
+1. На своей машине: `ssh-keygen -t ed25519 -f ~/.ssh/tradehub_deploy -N ""`
+2. На сервере под root: `mkdir -p ~/.ssh && chmod 700 ~/.ssh` и добавь строку из `~/.ssh/tradehub_deploy.pub` в `~/.ssh/authorized_keys`, затем `chmod 600 ~/.ssh/authorized_keys`
+3. Деплой:  
+   `DEPLOY_HOST=root@ВАШ_IP DEPLOY_SSH_KEY=~/.ssh/tradehub_deploy bash tradehub/scripts/deploy-to-server.sh`  
+   Параметры см. в `tradehub/scripts/deploy-env.example` (порт `DEPLOY_SSH_PORT`, ключ из переменной `DEPLOY_SSH_KEY_CONTENT` для секретов в Cursor).
 
 ---
 
@@ -132,4 +140,41 @@ systemctl restart tradehub.service
 
 ## 5. Домен и HTTPS
 
-В панели Beget для домена укажите **A-запись** на IP VPS. Затем на сервере: **Certbot** (`certbot --nginx`) для Let’s Encrypt.
+### 5.1 DNS (панель Beget → домены → DNS)
+
+Для сайта **[barakali.online](http://barakali.online/)** (или любого домена на этом VPS):
+
+| Тип | Имя / поддомен | Значение |
+|-----|----------------|----------|
+| **A** | `@` (корень) | IP вашего VPS (например `155.212.134.183`) |
+| **A** | `www` | тот же IP **или** CNAME `www` → `barakali.online` |
+
+Подождите 5–30 минут, пока DNS обновится: `dig +short barakali.online A` должен показать IP сервера.
+
+### 5.2 Nginx под домен (на сервере)
+
+Готовый конфиг в репозитории: `deploy/nginx/barakali.online.conf` — прокси на `127.0.0.1:3000`, редирект `www` → без `www`.
+
+```bash
+sudo cp /opt/tradehub/deploy/nginx/barakali.online.conf /etc/nginx/sites-available/barakali.online
+sudo ln -sf /etc/nginx/sites-available/barakali.online /etc/nginx/sites-enabled/
+# если раньше был только дефолтный tradehub.example.conf на все хосты — отключите конфликт:
+# sudo rm -f /etc/nginx/sites-enabled/default
+sudo nginx -t && sudo systemctl reload nginx
+```
+
+Проверка: `curl -sI http://barakali.online/` — должен быть ответ от приложения.
+
+### 5.3 HTTPS (Let’s Encrypt)
+
+После того как домен по A-записи смотрит на VPS:
+
+```bash
+sudo apt-get update
+sudo apt-get install -y certbot python3-certbot-nginx
+sudo certbot --nginx -d barakali.online -d www.barakali.online
+```
+
+Certbot сам допишет `listen 443 ssl` и пути к сертификатам. Автопродление обычно ставится в cron/systemd-timer.
+
+**Важно:** cookie админки с `secure: true` работают только по HTTPS; на чистом HTTP сессия может вести себя иначе — для продакшена лучше включить HTTPS.

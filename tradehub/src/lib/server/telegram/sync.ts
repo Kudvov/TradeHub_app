@@ -1,7 +1,7 @@
 import { scrapeMessageWithKind } from './scraper';
 import { db } from '../db';
-import { listings, telegramGroups, cities } from '../db/schema';
-import { and, eq, sql } from 'drizzle-orm';
+import { bannedAuthors, listings, telegramGroups, cities } from '../db/schema';
+import { and, eq, gte, sql } from 'drizzle-orm';
 import { listingContentFingerprint } from './listing-dedupe';
 import * as dotenv from 'dotenv';
 import { resolve } from 'path';
@@ -115,6 +115,18 @@ async function syncGroup(
 						albumListingId = null;
 						process.stdout.write('d');
 					} else {
+						if (parsed.extracted.contact) {
+							const banned = await db.query.bannedAuthors.findFirst({
+								where: eq(bannedAuthors.contact, parsed.extracted.contact)
+							});
+							if (banned) {
+								albumListingId = null;
+								process.stdout.write('b');
+								direction === 'up' ? currentId++ : currentId--;
+								continue;
+							}
+						}
+
 						const inserted = await db
 							.insert(listings)
 							.values({
@@ -179,35 +191,35 @@ async function syncGroup(
 // Telegram может иметь "дыры" (удалённые сообщения), поэтому проверяем
 // несколько соседних ID вместо одного, чтобы не ошибиться.
 async function findLatestMessageId(handle: string): Promise<number> {
-	// Начинаем с 10000 — если нет, идём вниз, если есть — вверх
+	// Проверяем окно из 50 подряд идущих ID — чтобы не ошибиться на удалённых сообщениях
 	const checkExists = async (id: number): Promise<boolean> => {
-		// Любой пост (даже только фото) — считаем ID занятым
-		for (let delta = 0; delta <= 4; delta++) {
+		for (let delta = 0; delta < 50; delta++) {
 			const o = await scrapeMessageWithKind(handle, id + delta);
-			await new Promise((res) => setTimeout(res, 300));
+			await new Promise((res) => setTimeout(res, 200));
 			if (o.kind !== 'missing') return true;
 		}
 		return false;
 	};
 
-	// Шаг 1: найти верхнюю границу удвоением от 1000
+	// Шаг 1: найти верхнюю границу удвоением.
+	// Стартуем с 1000 и удваиваем — охватываем каналы любого размера (до ~4M).
+	// Если 1000 не существует (много удалений в начале), пробуем следующий диапазон.
 	let probe = 1000;
 	let found = false;
-	while (probe <= 500000) {
+	while (probe <= 4_000_000) {
 		const exists = await checkExists(probe);
 		if (!exists) {
-			// Верхняя граница найдена
 			found = true;
 			break;
 		}
 		probe *= 2;
 	}
-	if (!found) probe = 500000;
+	if (!found) probe = 4_000_000;
 
 	// Шаг 2: бинарный поиск между probe/2 и probe
 	let lo = Math.max(1, Math.floor(probe / 2));
 	let hi = probe;
-	while (hi - lo > 50) {
+	while (hi - lo > 100) {
 		const mid = Math.floor((lo + hi) / 2);
 		const exists = await checkExists(mid);
 		if (exists) {
@@ -221,12 +233,13 @@ async function findLatestMessageId(handle: string): Promise<number> {
 
 async function updateListingsCounts() {
 	console.log('\n🔄 Обновляем счётчики объявлений по городам...');
+	const since90d = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
 	const allCities = await db.query.cities.findMany();
 	for (const city of allCities) {
 		const result = await db
 			.select({ count: sql<number>`count(*)::int` })
 			.from(listings)
-			.where(eq(listings.cityId, city.id));
+			.where(and(eq(listings.cityId, city.id), eq(listings.status, 'active'), gte(listings.publishedAt, since90d)));
 		const count = result[0]?.count ?? 0;
 		await db.update(cities).set({ listingsCount: count }).where(eq(cities.id, city.id));
 		console.log(`  ${city.name}: ${count} объявлений`);
@@ -252,24 +265,31 @@ async function main() {
 				.replace(/\/$/, '');
 
 			if (group.lastMessageId <= 1) {
-				// Группа ещё не парсилась — качаем историю вниз
-				let startId: number;
+				// Группа ещё без курсора после первого запуска
 				if (group.startMessageId > 0) {
-					// Используем заданный стартовый ID из БД
-					startId = group.startMessageId;
-					console.log(`\n📍 @${handle}: стартовый ID из БД: ${startId}, качаем историю вниз`);
+					// Вручную задан ID в админке — парсим только вперёд (к более новым сообщениям)
+					console.log(
+						`\n📍 @${handle}: стартовый ID из БД: ${group.startMessageId}, только вперёд (вверх по ID)`
+					);
+					const added = await syncGroup(
+						handle,
+						group.id,
+						group.cityId,
+						group.startMessageId,
+						'up'
+					);
+					totalAdded += added;
 				} else {
-					// Автоопределяем верхний ID
-					startId = await findLatestMessageId(handle);
+					// Авто: находим верхний ID и качаем историю вниз (к старым сообщениям)
+					const startId = await findLatestMessageId(handle);
 					console.log(`\n📍 @${handle}: автоопределён верхний ID ~${startId}, качаем историю вниз`);
+					const added = await syncGroup(handle, group.id, group.cityId, startId, 'down');
+					totalAdded += added;
+					await db
+						.update(telegramGroups)
+						.set({ lastMessageId: startId, lastParsedAt: new Date() })
+						.where(eq(telegramGroups.id, group.id));
 				}
-				const added = await syncGroup(handle, group.id, group.cityId, startId, 'down');
-				totalAdded += added;
-				// Сохраняем верхний ID как курсор для следующего запуска
-				await db
-					.update(telegramGroups)
-					.set({ lastMessageId: startId, lastParsedAt: new Date() })
-					.where(eq(telegramGroups.id, group.id));
 			} else {
 				// Группа уже парсилась — подбираем новые сообщения вверх
 				const added = await syncGroup(

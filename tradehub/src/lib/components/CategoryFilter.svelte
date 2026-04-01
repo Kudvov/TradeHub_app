@@ -27,7 +27,7 @@
 		onclick={() => handleClick('')}
 		id="category-all"
 	>
-		🔥 Все
+		Все
 	</button>
 	{#each categories as cat (cat.id)}
 		<button
@@ -36,7 +36,7 @@
 			onclick={() => handleClick(cat.slug)}
 			id="category-{cat.slug}"
 		>
-			{cat.icon} {cat.name}
+			{cat.name}
 		</button>
 	{/each}
 </div>
@@ -80,9 +80,8 @@
 	}
 
 	.filter-chip.active {
-		background: var(--accent);
-		border-color: var(--accent);
-		color: #fff;
-		box-shadow: 0 2px 8px var(--accent-glow);
+		background: var(--text-primary);
+		border-color: var(--text-primary);
+		color: var(--bg-secondary);
 	}
 </style>

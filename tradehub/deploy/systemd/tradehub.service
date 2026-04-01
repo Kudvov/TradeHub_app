@@ -11,6 +11,8 @@ EnvironmentFile=-/opt/tradehub/.env
 Environment=NODE_ENV=production
 Environment=PORT=3000
 Environment=HOST=127.0.0.1
+# Через nginx: иначе origin считается https по умолчанию → CSRF «Cross-site POST» при доступе по http
+Environment=PROTOCOL_HEADER=x-forwarded-proto
 ExecStart=/usr/bin/env node /opt/tradehub/build/index.js
 Restart=on-failure
 RestartSec=5

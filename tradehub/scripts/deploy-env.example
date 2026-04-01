@@ -1,0 +1,12 @@
+# Скопируй в tradehub/scripts/deploy.env (не коммитится), подставь значения:
+#   cd /path/to/TradeHub_app && set -a && source tradehub/scripts/deploy.env && set +a && bash tradehub/scripts/deploy-to-server.sh
+#
+# DEPLOY_HOST=root@155.212.134.183
+# DEPLOY_SSH_PORT=22
+# DEPLOY_SSH_KEY=/Users/you/.ssh/tradehub_deploy
+#
+# В Cursor: Settings → переопредели переменные для терминала/агента (или ~/.zshrc).
+# Для агента без интерактива: ключ в файле или DEPLOY_SSH_KEY_CONTENT в секретах.
+#
+# DEPLOY_SSH_KEY_CONTENT="-----BEGIN OPENSSH PRIVATE KEY-----\n...\n-----END OPENSSH PRIVATE KEY-----"
+# Если нужен ввод пароля SSH вручную: DEPLOY_SSH_BATCH=no

@@ -1,41 +1,39 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
 /* ═══════════════════════════════════════════════════════
    LIGHT THEME (Default)
    ═══════════════════════════════════════════════════════ */
 :root {
-	/* ─── Color Palette ─── */
-	--bg-primary: #f8f9fb;
+	/* ─── Minimal palette ─── */
+	--bg-primary: #fafafa;
 	--bg-secondary: #ffffff;
 	--bg-card: #ffffff;
-	--bg-card-hover: #f3f4f8;
-	--bg-elevated: #f0f1f5;
-	--bg-input: #f3f4f8;
+	--bg-card-hover: #f5f5f5;
+	--bg-elevated: #f0f0f0;
+	--bg-input: #ffffff;
 
-	--border: #e2e4ea;
-	--border-hover: #cdd0d9;
-	--border-focus: #6c5ce7;
+	--border: #e8e8e8;
+	--border-hover: #d4d4d4;
+	--border-focus: #a3a3a3;
 
-	--text-primary: #1a1a2e;
-	--text-secondary: #5a5a72;
-	--text-muted: #8a8a9e;
+	--text-primary: #171717;
+	--text-secondary: #525252;
+	--text-muted: #737373;
 	--text-inverse: #ffffff;
 
-	/* Accent: Electric Violet */
-	--accent: #6c5ce7;
-	--accent-hover: #5a4bd6;
-	--accent-subtle: rgba(108, 92, 231, 0.08);
-	--accent-glow: rgba(108, 92, 231, 0.15);
+	--accent: #262626;
+	--accent-hover: #171717;
+	--accent-subtle: rgba(0, 0, 0, 0.05);
+	--accent-glow: rgba(0, 0, 0, 0.06);
 
-	--success: #00b374;
-	--success-subtle: rgba(0, 179, 116, 0.08);
-	--warning: #e69500;
-	--danger: #e63950;
-	--info: #2196f3;
+	--success: #15803d;
+	--success-subtle: rgba(21, 128, 61, 0.08);
+	--warning: #a16207;
+	--danger: #b91c1c;
+	--info: #0369a1;
 
-	/* Header glass */
-	--header-glass: rgba(248, 249, 251, 0.88);
-	--card-badge-bg: rgba(255, 255, 255, 0.85);
+	--header-glass: rgba(250, 250, 250, 0.92);
+	--card-badge-bg: rgba(255, 255, 255, 0.92);
 	--card-badge-border: rgba(0, 0, 0, 0.06);
 
 	/* ─── Typography ─── */
@@ -43,17 +41,17 @@
 	--font-mono: 'JetBrains Mono', 'SF Mono', 'Fira Code', monospace;
 
 	/* ─── Sizing ─── */
-	--radius-sm: 8px;
-	--radius-md: 12px;
-	--radius-lg: 16px;
-	--radius-xl: 20px;
+	--radius-sm: 6px;
+	--radius-md: 8px;
+	--radius-lg: 10px;
+	--radius-xl: 12px;
 	--radius-full: 9999px;
 
-	/* ─── Shadows ─── */
-	--shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06);
-	--shadow-md: 0 4px 16px rgba(0, 0, 0, 0.08);
-	--shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.1);
-	--shadow-glow: 0 0 20px var(--accent-glow);
+	/* ─── Shadows (barely visible) ─── */
+	--shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
+	--shadow-md: 0 2px 8px rgba(0, 0, 0, 0.06);
+	--shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.06);
+	--shadow-glow: none;
 
 	/* ─── Transitions ─── */
 	--transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
@@ -68,40 +66,40 @@
    DARK THEME
    ═══════════════════════════════════════════════════════ */
 :root.dark {
-	--bg-primary: #0a0a0f;
-	--bg-secondary: #12121a;
-	--bg-card: #16161f;
-	--bg-card-hover: #1c1c28;
-	--bg-elevated: #1e1e2a;
-	--bg-input: #1a1a26;
+	--bg-primary: #0c0c0c;
+	--bg-secondary: #141414;
+	--bg-card: #171717;
+	--bg-card-hover: #1f1f1f;
+	--bg-elevated: #262626;
+	--bg-input: #171717;
 
-	--border: #2a2a3a;
-	--border-hover: #3a3a4e;
-	--border-focus: #6c5ce7;
+	--border: #2a2a2a;
+	--border-hover: #404040;
+	--border-focus: #737373;
 
-	--text-primary: #e8e8ef;
-	--text-secondary: #9898a8;
-	--text-muted: #6a6a7a;
-	--text-inverse: #0a0a0f;
+	--text-primary: #fafafa;
+	--text-secondary: #a3a3a3;
+	--text-muted: #737373;
+	--text-inverse: #171717;
 
-	--accent: #6c5ce7;
-	--accent-hover: #7d6ff0;
-	--accent-subtle: rgba(108, 92, 231, 0.12);
-	--accent-glow: rgba(108, 92, 231, 0.25);
+	--accent: #e5e5e5;
+	--accent-hover: #fafafa;
+	--accent-subtle: rgba(255, 255, 255, 0.06);
+	--accent-glow: rgba(255, 255, 255, 0.04);
 
-	--success: #00d68f;
-	--success-subtle: rgba(0, 214, 143, 0.12);
-	--warning: #ffaa00;
-	--danger: #ff4757;
-	--info: #3bb0ff;
+	--success: #4ade80;
+	--success-subtle: rgba(74, 222, 128, 0.1);
+	--warning: #fbbf24;
+	--danger: #f87171;
+	--info: #38bdf8;
 
-	--header-glass: rgba(10, 10, 15, 0.85);
-	--card-badge-bg: rgba(10, 10, 15, 0.75);
-	--card-badge-border: rgba(255, 255, 255, 0.08);
+	--header-glass: rgba(12, 12, 12, 0.92);
+	--card-badge-bg: rgba(23, 23, 23, 0.9);
+	--card-badge-border: rgba(255, 255, 255, 0.06);
 
-	--shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
-	--shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
-	--shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
+	--shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
+	--shadow-md: 0 2px 8px rgba(0, 0, 0, 0.25);
+	--shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.3);
 
 	color-scheme: dark;
 }
@@ -120,6 +118,7 @@ html {
 	-webkit-font-smoothing: antialiased;
 	-moz-osx-font-smoothing: grayscale;
 	scroll-behavior: smooth;
+	overflow-x: hidden;
 }
 
 body {
@@ -132,15 +131,6 @@ body {
 	transition: background var(--transition-base), color var(--transition-base);
 }
 
-/* Subtle noise overlay (dark only) */
-:root.dark body::before {
-	content: '';
-	position: fixed;
-	inset: 0;
-	background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
-	pointer-events: none;
-	z-index: 0;
-}
 
 a {
 	color: var(--accent);
@@ -230,14 +220,13 @@ img {
 
 .btn-primary {
 	background: var(--accent);
-	color: #fff;
-	box-shadow: 0 2px 8px var(--accent-glow);
+	color: var(--bg-secondary);
+	box-shadow: none;
 }
 
 .btn-primary:hover {
 	background: var(--accent-hover);
-	box-shadow: var(--shadow-glow);
-	transform: translateY(-1px);
+	color: var(--bg-secondary);
 }
 
 .btn-secondary {
@@ -293,8 +282,8 @@ img {
 
 .input:focus {
 	outline: none;
-	border-color: var(--border-focus);
-	box-shadow: 0 0 0 3px var(--accent-subtle);
+	border-color: var(--border-hover);
+	box-shadow: none;
 }
 
 /* ─── Cards ─── */
@@ -309,8 +298,7 @@ img {
 .card:hover {
 	border-color: var(--border-hover);
 	background: var(--bg-card-hover);
-	box-shadow: var(--shadow-md);
-	transform: translateY(-2px);
+	box-shadow: none;
 }
 
 /* ─── Badge ─── */
@@ -389,11 +377,9 @@ img {
 @keyframes fadeIn {
 	from {
 		opacity: 0;
-		transform: translateY(8px);
 	}
 	to {
 		opacity: 1;
-		transform: translateY(0);
 	}
 }
 
@@ -403,10 +389,8 @@ img {
 
 /* ─── Typography helpers ─── */
 .text-gradient {
-	background: linear-gradient(135deg, var(--accent) 0%, #3bb0ff 50%, var(--success) 100%);
-	-webkit-background-clip: text;
-	-webkit-text-fill-color: transparent;
-	background-clip: text;
+	color: var(--text-primary);
+	font-weight: 600;
 }
 
 .text-sm {

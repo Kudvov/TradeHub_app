@@ -1,11 +1,11 @@
 <script lang="ts">
-	import SearchBar from '$lib/components/SearchBar.svelte';
 	import CategoryFilter from '$lib/components/CategoryFilter.svelte';
 	import ListingCard from '$lib/components/ListingCard.svelte';
 	import { goto } from '$app/navigation';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
+	type PaginationItem = number | '...';
 
 	function buildUrl(params: { category?: string; q?: string; page?: number }) {
 		const base = `/${data.city.slug}`;
@@ -22,16 +22,29 @@
 		return qs ? `${base}?${qs}` : base;
 	}
 
-	function handleSearch(query: string) {
-		goto(buildUrl({ q: query, page: 1 }));
-	}
-
 	function handleCategorySelect(slug: string) {
 		goto(buildUrl({ category: slug, page: 1 }));
 	}
 
 	function handlePage(page: number) {
 		goto(buildUrl({ page }));
+	}
+
+	function getPaginationItems(currentPage: number, totalPages: number): PaginationItem[] {
+		if (totalPages <= 7) {
+			return Array.from({ length: totalPages }, (_, i) => i + 1);
+		}
+
+		const items: PaginationItem[] = [1];
+		const start = Math.max(2, currentPage - 1);
+		const end = Math.min(totalPages - 1, currentPage + 1);
+
+		if (start > 2) items.push('...');
+		for (let p = start; p <= end; p++) items.push(p);
+		if (end < totalPages - 1) items.push('...');
+
+		items.push(totalPages);
+		return items;
 	}
 </script>
 
@@ -51,17 +64,11 @@
 					</svg>
 					Все города
 				</a>
-				<h1 class="city-page-title">
-					<span class="city-emoji">📍</span>
-					{data.city.name}
-				</h1>
+				<h1 class="city-page-title">{data.city.name}</h1>
 				<p class="city-page-count text-secondary">
 					{data.total}
 					{data.total === 1 ? 'объявление' : data.total < 5 ? 'объявления' : 'объявлений'}
 				</p>
-			</div>
-			<div class="city-search">
-				<SearchBar value={data.filters.query} placeholder="Поиск в {data.city.name}..." onSearch={handleSearch} />
 			</div>
 		</div>
 
@@ -101,14 +108,19 @@
 				{/if}
 
 				<div class="pagination-pages">
-					{#each Array.from({ length: data.totalPages }, (_, i) => i + 1) as p}
-						<button
-							class="pagination-page btn btn-sm"
-							class:active={p === data.page}
-							onclick={() => handlePage(p)}
-						>
-							{p}
-						</button>
+					{#each getPaginationItems(data.page, data.totalPages) as item}
+						{#if item === '...'}
+							<span class="pagination-ellipsis">…</span>
+						{:else}
+							<button
+								class="pagination-page btn btn-sm"
+								class:active={item === data.page}
+								onclick={() => handlePage(item)}
+								aria-current={item === data.page ? 'page' : undefined}
+							>
+								{item}
+							</button>
+						{/if}
 					{/each}
 				</div>
 
@@ -157,25 +169,14 @@
 	}
 
 	.city-page-title {
-		font-size: 1.75rem;
-		font-weight: 800;
+		font-size: 1.375rem;
+		font-weight: 600;
 		letter-spacing: -0.02em;
-		display: flex;
-		align-items: center;
-		gap: 0.5rem;
-	}
-
-	.city-emoji {
-		font-size: 1.5rem;
 	}
 
 	.city-page-count {
 		margin-top: 0.25rem;
 		font-size: 0.9375rem;
-	}
-
-	.city-search {
-		flex-shrink: 0;
 	}
 
 	.city-filters {
@@ -215,6 +216,17 @@
 	.pagination-pages {
 		display: flex;
 		gap: 0.25rem;
+		flex-wrap: wrap;
+		justify-content: center;
+	}
+
+	.pagination-ellipsis {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		min-width: 36px;
+		min-height: 36px;
+		color: var(--text-muted);
 	}
 
 	.pagination-page {

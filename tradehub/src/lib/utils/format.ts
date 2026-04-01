@@ -41,6 +41,13 @@ export function truncate(text: string, maxLength: number = 120): string {
 	return text.slice(0, maxLength).trimEnd() + '…';
 }
 
+export function maskLinks(text: string): string {
+	if (!text) return text;
+	return text
+		.replace(/(?:https?:\/\/|www\.)\S+/gi, '[ссылка скрыта]')
+		.replace(/\bt\.me\/\S+/gi, '[ссылка скрыта]');
+}
+
 export function slugify(text: string): string {
 	return text
 		.toLowerCase()

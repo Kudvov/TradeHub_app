@@ -1,16 +1,50 @@
 <script lang="ts">
 	import '../app.css';
 	import Header from '$lib/components/Header.svelte';
+	import SearchBar from '$lib/components/SearchBar.svelte';
+	import { page } from '$app/stores';
+	import { goto } from '$app/navigation';
 	import type { LayoutData } from './$types';
 
 	let { children, data }: { children: any; data: LayoutData } = $props();
+
+	const activeCity = $derived.by(() => {
+		const first = $page.url.pathname.split('/').filter(Boolean)[0];
+		if (!first) return null;
+		return data.cities.find((c) => c.slug === first) ?? null;
+	});
+
+	const searchBarValue = $derived(activeCity ? ($page.url.searchParams.get('q') ?? '') : '');
+
+	const searchPlaceholder = $derived(
+		activeCity ? `Поиск в ${activeCity.name}...` : 'Что ищешь? iPhone, велосипед, диван...'
+	);
+
+	function handleLayoutSearch(query: string) {
+		const slug = activeCity?.slug ?? data.cities[0]?.slug ?? 'tbilisi';
+		const trimmed = query.trim();
+		const params = new URLSearchParams();
+		if (activeCity) {
+			const cat = $page.url.searchParams.get('category');
+			if (cat) params.set('category', cat);
+		}
+		if (trimmed) params.set('q', trimmed);
+		const qs = params.toString();
+		goto(qs ? `/${slug}?${qs}` : `/${slug}`);
+	}
 </script>
 
 <svelte:head>
 	<title>TradeHub — Объявления из Telegram</title>
 </svelte:head>
 
-<Header />
+<Header cities={data.cities} />
+
+<div class="layout-search-sticky">
+	<div class="container layout-search-inner">
+		<SearchBar value={searchBarValue} placeholder={searchPlaceholder} onSearch={handleLayoutSearch} />
+	</div>
+</div>
 
 <main class="main-content">
 	{@render children()}
@@ -19,7 +53,7 @@
 <footer class="footer">
 	<div class="container footer-inner">
 		<div class="footer-brand">
-			<span class="footer-logo">⚡ Trade<span class="text-gradient">Hub</span></span>
+			<span class="footer-logo">Trade<span class="footer-logo-muted">Hub</span></span>
 			<p class="text-sm text-muted">Объявления из Telegram-барахолок</p>
 		</div>
 		<div class="footer-links">
@@ -32,6 +66,20 @@
 </footer>
 
 <style>
+	.layout-search-sticky {
+		position: sticky;
+		top: 64px;
+		z-index: 90;
+		padding: 0.5rem 0;
+		background: var(--bg-primary);
+		border-bottom: 1px solid var(--border);
+	}
+
+	.layout-search-inner {
+		display: flex;
+		justify-content: center;
+	}
+
 	.main-content {
 		position: relative;
 		z-index: 1;
@@ -41,8 +89,8 @@
 	.footer {
 		position: relative;
 		z-index: 1;
-		margin-top: 4rem;
-		padding: 2.5rem 0;
+		margin-top: 3rem;
+		padding: 2rem 0;
 		border-top: 1px solid var(--border);
 		background: var(--bg-secondary);
 	}
@@ -56,9 +104,14 @@
 	}
 
 	.footer-logo {
-		font-size: 1.125rem;
-		font-weight: 700;
+		font-size: 1rem;
+		font-weight: 600;
 		color: var(--text-primary);
+	}
+
+	.footer-logo-muted {
+		font-weight: 500;
+		color: var(--text-muted);
 	}
 
 	.footer-links {

@@ -10,23 +10,17 @@
 	} = $props();
 
 	let inputValue = $state('');
-	$effect(() => { inputValue = value; });
-	let debounceTimer: ReturnType<typeof setTimeout>;
+	$effect(() => {
+		inputValue = value;
+	});
 
 	function handleInput(e: Event) {
-		const target = e.target as HTMLInputElement;
-		inputValue = target.value;
-
-		clearTimeout(debounceTimer);
-		debounceTimer = setTimeout(() => {
-			onSearch?.(inputValue);
-		}, 300);
+		inputValue = (e.target as HTMLInputElement).value;
 	}
 
 	function handleSubmit(e: Event) {
 		e.preventDefault();
-		clearTimeout(debounceTimer);
-		onSearch?.(inputValue);
+		onSearch?.(inputValue.trim());
 	}
 
 	function handleClear() {
@@ -68,16 +62,16 @@
 		gap: 0;
 		background: var(--bg-input);
 		border: 1px solid var(--border);
-		border-radius: var(--radius-lg);
-		padding: 0.25rem 0.25rem 0.25rem 1rem;
-		transition: all var(--transition-fast);
+		border-radius: var(--radius-md);
+		padding: 0.125rem 0.125rem 0.125rem 0.875rem;
+		transition: border-color var(--transition-fast);
 		max-width: 640px;
 		width: 100%;
 	}
 
 	.search-bar:focus-within {
-		border-color: var(--border-focus);
-		box-shadow: 0 0 0 3px var(--accent-subtle);
+		border-color: var(--text-muted);
+		box-shadow: none;
 	}
 
 	.search-icon {

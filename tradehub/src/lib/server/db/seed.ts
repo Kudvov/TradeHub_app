@@ -54,8 +54,18 @@ async function seed() {
 		// startMessageId: с какого ID начинать парсинг истории вниз (0 = автоопределение)
 		// startMessageId: 0 = авто верхний ID; фиксированный ID часто попадает в «мёртвую» зону удалённых сообщений
 		{ title: 'Batumi Trade Hub', username: 'BatumiTradeHub', cityId: batumiId, lastMessageId: 1, startMessageId: 0 },
+		{ title: 'baraholka_batumi_home', username: 'baraholka_batumi_home', cityId: batumiId, lastMessageId: 1, startMessageId: 0 },
+		{ title: 'baraholka_batumi_home_chanel', username: 'baraholka_batumi_home_chanel', cityId: batumiId, lastMessageId: 1, startMessageId: 0 },
+		{ title: 'baraholka_avito_batumi', username: 'baraholka_avito_batumi', cityId: batumiId, lastMessageId: 1, startMessageId: 0 },
+		{ title: 'baraholka_ge', username: 'baraholka_ge', cityId: batumiId, lastMessageId: 1, startMessageId: 0 },
+		{ title: 'baraholka_batum', username: 'baraholka_batum', cityId: batumiId, lastMessageId: 1, startMessageId: 0 },
 		{ title: 'Барахолка Тбилиси', username: 'tbilisi_baraholka', cityId: tbilisiId, lastMessageId: 1, startMessageId: 0 },
-		{ title: 'Тбилиси Купи-Продай', username: 'tbilisi_buy_sell', cityId: tbilisiId, lastMessageId: 1, startMessageId: 0 }
+		{ title: 'Тбилиси Купи-Продай', username: 'tbilisi_buy_sell', cityId: tbilisiId, lastMessageId: 1, startMessageId: 0 },
+		{ title: 'baraholka_tbilis', username: 'baraholka_tbilis', cityId: tbilisiId, lastMessageId: 1, startMessageId: 0 },
+		{ title: 'avito_baraholka_tbilisi', username: 'avito_baraholka_tbilisi', cityId: tbilisiId, lastMessageId: 1, startMessageId: 0 },
+		{ title: 'baraholka_tbilisi', username: 'baraholka_tbilisi', cityId: tbilisiId, lastMessageId: 1, startMessageId: 0 },
+		{ title: 'tbilisi_market', username: 'tbilisi_market', cityId: tbilisiId, lastMessageId: 1, startMessageId: 0 },
+		{ title: 'Tbilisi Trade Hub', username: 'TbilisiTradeHub', cityId: tbilisiId, lastMessageId: 1, startMessageId: 0 }
 		])
 		.onConflictDoNothing()
 		.returning();
