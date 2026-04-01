@@ -3,10 +3,28 @@
 	import Header from '$lib/components/Header.svelte';
 	import SearchBar from '$lib/components/SearchBar.svelte';
 	import { page } from '$app/stores';
-	import { goto } from '$app/navigation';
+	import { afterNavigate, goto, onNavigate } from '$app/navigation';
+	import { homeExitAnimating } from '$lib/stores/home-exit';
 	import type { LayoutData } from './$types';
 
 	let { children, data }: { children: any; data: LayoutData } = $props();
+
+	onNavigate((navigation) => {
+		if (typeof document === 'undefined' || !document.startViewTransition) return;
+
+		return new Promise<void>((resolve) => {
+			document.startViewTransition(async () => {
+				resolve();
+				await navigation.complete;
+			});
+		});
+	});
+
+	afterNavigate((nav) => {
+		if (nav.to && nav.to.url.pathname !== '/') {
+			homeExitAnimating.set(false);
+		}
+	});
 
 	const activeCity = $derived.by(() => {
 		const first = $page.url.pathname.split('/').filter(Boolean)[0];
@@ -38,7 +56,11 @@
 	<title>TradeHub — Объявления из Telegram</title>
 </svelte:head>
 
-<div class="app-root" class:app-root--home={$page.url.pathname === '/'}>
+<div
+	class="app-root"
+	class:app-root--home={$page.url.pathname === '/'}
+	class:app-root--home-exit={$page.url.pathname === '/' && $homeExitAnimating}
+>
 	<Header cities={data.cities} />
 
 	{#if $page.url.pathname !== '/'}
@@ -92,6 +114,34 @@
 		height: 100dvh;
 		max-height: 100dvh;
 		overflow: hidden;
+	}
+
+	/* исчезновение первого экрана перед переходом к поиску */
+	.app-root--home.app-root--home-exit :global(header.header),
+	.app-root--home.app-root--home-exit .main-content--home,
+	.app-root--home.app-root--home-exit .footer-home {
+		transition:
+			opacity 0.42s cubic-bezier(0.4, 0, 0.2, 1),
+			transform 0.48s cubic-bezier(0.33, 1, 0.32, 1),
+			filter 0.42s ease;
+	}
+
+	.app-root--home.app-root--home-exit :global(header.header),
+	.app-root--home.app-root--home-exit .main-content--home,
+	.app-root--home.app-root--home-exit .footer-home {
+		opacity: 0;
+		transform: translateY(-12px);
+		filter: blur(10px);
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.app-root--home.app-root--home-exit :global(header.header),
+		.app-root--home.app-root--home-exit .main-content--home,
+		.app-root--home.app-root--home-exit .footer-home {
+			filter: none;
+			transform: none;
+			transition-duration: 0.01ms;
+		}
 	}
 
 	.layout-search-sticky {

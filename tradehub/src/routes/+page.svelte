@@ -1,19 +1,23 @@
 <script lang="ts">
 	import SearchBar from '$lib/components/SearchBar.svelte';
 	import { goto } from '$app/navigation';
+	import { homeExitAnimating } from '$lib/stores/home-exit';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
 
-	let isLifting = $state(false);
+	/** Время совпадает с transition на шапке/контенте в +layout */
+	const EXIT_MS = 480;
+
+	let navigating = $state(false);
 
 	function prefersReducedMotion(): boolean {
 		if (typeof window === 'undefined') return false;
 		return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 	}
 
-	function handleHomeSearch(query: string) {
-		if (isLifting) return;
+	async function handleHomeSearch(query: string) {
+		if (navigating) return;
 		const slug = data.cities[0]?.slug ?? 'tbilisi';
 		const trimmed = query.trim();
 		const params = new URLSearchParams();
@@ -22,14 +26,17 @@
 		const url = qs ? `/${slug}?${qs}` : `/${slug}`;
 
 		if (prefersReducedMotion()) {
-			goto(url);
+			await goto(url);
 			return;
 		}
 
-		isLifting = true;
+		navigating = true;
+		homeExitAnimating.set(true);
 		window.setTimeout(() => {
-			goto(url);
-		}, 480);
+			goto(url).finally(() => {
+				navigating = false;
+			});
+		}, EXIT_MS);
 	}
 </script>
 
@@ -41,7 +48,7 @@
 	/>
 </svelte:head>
 
-<section class="hero hero--landing" class:is-lifting={isLifting}>
+<section class="hero hero--landing">
 	<div class="hero-inner fade-in">
 		<div class="hero-text">
 			<h1 class="hero-title">
@@ -51,7 +58,7 @@
 				Телеграм-барахолки Батуми и Тбилиси: без лишнего шума, только поиск и фильтры.
 			</p>
 		</div>
-		<div class="home-search" class:lifting={isLifting}>
+		<div class="home-search">
 			<SearchBar
 				value=""
 				placeholder="Что ищешь? iPhone, велосипед, диван..."
@@ -87,17 +94,6 @@
 
 	.hero-text {
 		text-align: center;
-		transition: opacity 0.35s ease;
-	}
-
-	.hero--landing.is-lifting .hero-text {
-		opacity: 0.35;
-	}
-
-	@media (prefers-reduced-motion: reduce) {
-		.hero--landing.is-lifting .hero-text {
-			opacity: 1;
-		}
 	}
 
 	.hero-title {
@@ -124,27 +120,6 @@
 
 	.home-search {
 		width: 100%;
-		transition:
-			transform 0.48s cubic-bezier(0.33, 1, 0.68, 1),
-			opacity 0.4s ease;
-		will-change: transform;
-	}
-
-	.home-search.lifting {
-		transform: translateY(calc(-1 * min(36vh, 260px)));
-		opacity: 0.25;
-		pointer-events: none;
-	}
-
-	@media (prefers-reduced-motion: reduce) {
-		.home-search {
-			transition: none;
-		}
-
-		.home-search.lifting {
-			transform: none;
-			opacity: 1;
-		}
 	}
 
 	@media (max-height: 560px) {
