@@ -125,7 +125,22 @@
 					{#if listing.category}
 						<span class="badge">{listing.category.icon} {listing.category.name}</span>
 					{/if}
-					<span class="detail-date text-muted text-sm">{formatDate(listing.publishedAt)}</span>
+					<div class="detail-meta-right">
+						<span class="detail-date text-muted text-sm">{formatDate(listing.publishedAt)}</span>
+						<button
+							type="button"
+							class="report-icon-btn"
+							onclick={openReport}
+							aria-label="Пожаловаться на объявление"
+							title="Пожаловаться"
+						>
+							<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+								<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+								<line x1="12" y1="9" x2="12" y2="13" />
+								<line x1="12" y1="17" x2="12.01" y2="17" />
+							</svg>
+						</button>
+					</div>
 				</div>
 
 				<h1 class="detail-title">{safeTitle}</h1>
@@ -187,10 +202,6 @@
 						↗ Перейти к объявлению
 					</a>
 				{/if}
-
-				<button class="report-trigger" type="button" onclick={openReport} aria-label="Пожаловаться на объявление">
-					⚠️ Пожаловаться
-				</button>
 			</div>
 		</div>
 
@@ -362,7 +373,46 @@
 	.detail-meta {
 		display: flex;
 		align-items: center;
+		justify-content: space-between;
 		gap: 0.75rem;
+		flex-wrap: wrap;
+	}
+
+	.detail-meta-right {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		margin-left: auto;
+		flex-shrink: 0;
+	}
+
+	.report-icon-btn {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 2.5rem;
+		height: 2.5rem;
+		padding: 0;
+		border: 1px solid var(--border);
+		border-radius: var(--radius-md);
+		background: var(--bg-secondary);
+		color: var(--warning, #ca8a04);
+		cursor: pointer;
+		transition:
+			background var(--transition-fast),
+			border-color var(--transition-fast),
+			color var(--transition-fast);
+	}
+
+	.report-icon-btn:hover {
+		background: var(--bg-card-hover);
+		border-color: var(--border-hover);
+		color: var(--text-primary);
+	}
+
+	.report-icon-btn:focus-visible {
+		outline: 2px solid var(--border-focus);
+		outline-offset: 2px;
 	}
 
 	.detail-title {
@@ -375,16 +425,18 @@
 	}
 
 	.detail-price-block {
-		padding: 1rem 1.25rem;
+		display: inline-block;
+		padding: 0.5rem 0.875rem;
 		background: var(--bg-card);
 		border: 1px solid var(--border);
-		border-radius: var(--radius-md);
+		border-radius: var(--radius-sm);
 	}
 
 	.detail-price {
-		font-size: 1.5rem;
+		font-size: 1.125rem;
 		font-weight: 600;
 		color: var(--text-primary);
+		line-height: 1.2;
 	}
 
 	.detail-section-title {
@@ -490,16 +542,6 @@
 	.report-success {
 		color: #2ecc71;
 		font-size: 0.875rem;
-	}
-
-	.report-trigger {
-		width: fit-content;
-		border: 1px solid var(--border);
-		border-radius: var(--radius-sm);
-		background: var(--bg-secondary);
-		color: var(--text-secondary);
-		padding: 0.45rem 0.75rem;
-		cursor: pointer;
 	}
 
 	.report-overlay {
