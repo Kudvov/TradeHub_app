@@ -14,16 +14,26 @@ export const load: LayoutServerLoad = async () => {
 			.orderBy(asc(cities.name));
 
 		const since = new Date(Date.now() - 24 * 60 * 60 * 1000);
-		const newCounts = await db
-			.select({ cityId: listings.cityId, cnt: count() })
-			.from(listings)
-			.where(and(eq(listings.status, 'active'), gte(listings.publishedAt, since)))
-			.groupBy(listings.cityId);
+		const [newCounts, activeCounts] = await Promise.all([
+			db
+				.select({ cityId: listings.cityId, cnt: count() })
+				.from(listings)
+				.where(and(eq(listings.status, 'active'), gte(listings.publishedAt, since)))
+				.groupBy(listings.cityId),
+			db
+				.select({ cityId: listings.cityId, cnt: count() })
+				.from(listings)
+				.where(eq(listings.status, 'active'))
+				.groupBy(listings.cityId)
+		]);
 
 		const countMap = new Map(newCounts.map((r) => [r.cityId, Number(r.cnt)]));
+		const activeMap = new Map(activeCounts.map((r) => [r.cityId, Number(r.cnt)]));
 		const citiesWithCounts = allCities.map((c) => ({
 			...c,
-			newCount: countMap.get(c.id) ?? 0
+			newCount: countMap.get(c.id) ?? 0,
+			// живое число активных объявлений для бейджа в шапке (не колонка cities.listings_count)
+			listingsCount: activeMap.get(c.id) ?? 0
 		}));
 
 		return { cities: citiesWithCounts };

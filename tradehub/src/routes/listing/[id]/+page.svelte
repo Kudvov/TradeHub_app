@@ -122,25 +122,25 @@
 			<!-- Info -->
 			<div class="detail-info" id="listing-info">
 				<div class="detail-meta">
-					{#if listing.category}
-						<span class="badge">{listing.category.icon} {listing.category.name}</span>
-					{/if}
-					<div class="detail-meta-right">
+					<div class="detail-meta-left">
 						<span class="detail-date text-muted text-sm">{formatDate(listing.publishedAt)}</span>
-						<button
-							type="button"
-							class="report-icon-btn"
-							onclick={openReport}
-							aria-label="Пожаловаться на объявление"
-							title="Пожаловаться"
-						>
-							<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-								<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
-								<line x1="12" y1="9" x2="12" y2="13" />
-								<line x1="12" y1="17" x2="12.01" y2="17" />
-							</svg>
-						</button>
+						{#if listing.category}
+							<span class="badge">{listing.category.icon} {listing.category.name}</span>
+						{/if}
 					</div>
+					<button
+						type="button"
+						class="report-icon-btn"
+						onclick={openReport}
+						aria-label="Пожаловаться на объявление"
+						title="Пожаловаться"
+					>
+						<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+							<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+							<line x1="12" y1="9" x2="12" y2="13" />
+							<line x1="12" y1="17" x2="12.01" y2="17" />
+						</svg>
+					</button>
 				</div>
 
 				<h1 class="detail-title">{safeTitle}</h1>
@@ -378,15 +378,16 @@
 		flex-wrap: wrap;
 	}
 
-	.detail-meta-right {
+	.detail-meta-left {
 		display: flex;
 		align-items: center;
 		gap: 0.5rem;
-		margin-left: auto;
-		flex-shrink: 0;
+		flex-wrap: wrap;
+		min-width: 0;
 	}
 
 	.report-icon-btn {
+		flex-shrink: 0;
 		display: flex;
 		align-items: center;
 		justify-content: center;

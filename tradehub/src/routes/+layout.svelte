@@ -70,14 +70,13 @@
 		position: sticky;
 		top: 64px;
 		z-index: 90;
-		padding: 0.5rem 0;
+		padding: 0.75rem 0 1rem;
 		background: var(--bg-primary);
-		border-bottom: 1px solid var(--border);
 	}
 
 	.layout-search-inner {
 		display: flex;
-		justify-content: center;
+		width: 100%;
 	}
 
 	.main-content {

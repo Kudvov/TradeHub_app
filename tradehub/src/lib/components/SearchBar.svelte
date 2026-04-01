@@ -31,7 +31,7 @@
 
 <form class="search-bar" onsubmit={handleSubmit} id="search-bar">
 	<div class="search-icon">
-		<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+		<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
 			<circle cx="11" cy="11" r="8" />
 			<line x1="21" y1="21" x2="16.65" y2="16.65" />
 		</svg>
@@ -60,46 +60,47 @@
 		display: flex;
 		align-items: center;
 		gap: 0;
-		/* glass */
-		background: rgba(255, 255, 255, 0.42);
-		backdrop-filter: blur(14px) saturate(1.2);
-		-webkit-backdrop-filter: blur(14px) saturate(1.2);
-		border: 1px solid rgba(255, 255, 255, 0.55);
+		width: 100%;
+		max-width: none;
+		min-height: 3.5rem;
+		/* glass, чуть заметнее */
+		background: rgba(255, 255, 255, 0.55);
+		backdrop-filter: blur(16px) saturate(1.25);
+		-webkit-backdrop-filter: blur(16px) saturate(1.25);
+		border: 1px solid rgba(0, 0, 0, 0.08);
 		box-shadow:
-			var(--shadow-sm),
-			inset 0 1px 0 rgba(255, 255, 255, 0.65);
+			0 2px 12px rgba(0, 0, 0, 0.07),
+			0 1px 3px rgba(0, 0, 0, 0.04),
+			inset 0 1px 0 rgba(255, 255, 255, 0.75);
 		border-radius: var(--radius-xl);
-		padding: 0.25rem 0.25rem 0.25rem 1rem;
+		padding: 0.35rem 0.35rem 0.35rem 1.125rem;
 		transition:
 			border-color var(--transition-fast),
 			box-shadow var(--transition-fast);
-		max-width: 720px;
-		width: 100%;
-		min-height: 3.25rem;
 	}
 
 	:global(html.dark) .search-bar {
-		background: rgba(28, 28, 28, 0.55);
-		border-color: rgba(255, 255, 255, 0.1);
+		background: rgba(32, 32, 32, 0.72);
+		border-color: rgba(255, 255, 255, 0.12);
 		box-shadow:
-			var(--shadow-sm),
-			inset 0 1px 0 rgba(255, 255, 255, 0.06);
+			0 2px 16px rgba(0, 0, 0, 0.35),
+			inset 0 1px 0 rgba(255, 255, 255, 0.08);
 	}
 
 	.search-bar:focus-within {
-		border-color: rgba(0, 0, 0, 0.14);
+		border-color: rgba(0, 0, 0, 0.18);
 		box-shadow:
-			0 0 0 1px rgba(0, 0, 0, 0.06),
-			var(--shadow-md),
-			inset 0 1px 0 rgba(255, 255, 255, 0.5);
+			0 0 0 2px rgba(0, 0, 0, 0.05),
+			0 4px 20px rgba(0, 0, 0, 0.1),
+			inset 0 1px 0 rgba(255, 255, 255, 0.55);
 	}
 
 	:global(html.dark) .search-bar:focus-within {
-		border-color: rgba(255, 255, 255, 0.16);
+		border-color: rgba(255, 255, 255, 0.22);
 		box-shadow:
-			0 0 0 1px rgba(255, 255, 255, 0.06),
-			var(--shadow-md),
-			inset 0 1px 0 rgba(255, 255, 255, 0.05);
+			0 0 0 2px rgba(255, 255, 255, 0.06),
+			0 4px 24px rgba(0, 0, 0, 0.45),
+			inset 0 1px 0 rgba(255, 255, 255, 0.06);
 	}
 
 	.search-icon {
@@ -114,9 +115,9 @@
 		background: transparent;
 		color: var(--text-primary);
 		font-family: var(--font-sans);
-		font-size: 1.0625rem;
+		font-size: 1.125rem;
 		line-height: 1.4;
-		padding: 0.75rem 0.875rem;
+		padding: 0.85rem 1rem;
 		outline: none;
 		min-width: 0;
 		-webkit-tap-highlight-color: transparent;
@@ -180,9 +181,10 @@
 	.search-submit {
 		flex-shrink: 0;
 		border-radius: var(--radius-lg);
-		min-height: 2.875rem;
-		padding-left: 1.25rem;
-		padding-right: 1.25rem;
-		font-size: 1rem;
+		min-height: 3rem;
+		padding-left: 1.5rem;
+		padding-right: 1.5rem;
+		font-size: 1.0625rem;
+		font-weight: 600;
 	}
 </style>

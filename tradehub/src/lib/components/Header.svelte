@@ -26,9 +26,7 @@
 					aria-current={currentSlug === city.slug ? 'page' : undefined}
 				>
 					{city.name}
-					{#if (city.listingsCount ?? 0) > 0}
-						<span class="city-count" title="Активных объявлений">{city.listingsCount}</span>
-					{/if}
+					<span class="city-count" title="Активных объявлений в городе">{(city.listingsCount ?? 0).toLocaleString('ru-RU')}</span>
 				</a>
 			{/each}
 		</nav>
@@ -46,7 +44,6 @@
 		z-index: 100;
 		background: var(--header-glass);
 		backdrop-filter: blur(8px);
-		border-bottom: 1px solid var(--border);
 		transition: background var(--transition-base);
 	}
 
