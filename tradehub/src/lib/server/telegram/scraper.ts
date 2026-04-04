@@ -1,6 +1,8 @@
 import * as cheerio from 'cheerio';
+import { ProxyAgent } from 'undici';
 import { extractData } from './extractor';
 import { findStopWord } from './stop-words';
+import { classifyListing } from './classifier';
 
 export interface ScrapedMessage {
 	id: number;
@@ -10,6 +12,30 @@ export interface ScrapedMessage {
 	date: Date | null;
 	author: string | null;
 	extracted: ReturnType<typeof extractData>;
+}
+
+const FETCH_TIMEOUT_MS = Number(process.env.PARSER_FETCH_TIMEOUT_MS ?? 12000);
+const FETCH_RETRIES = Number(process.env.PARSER_FETCH_RETRIES ?? 3);
+const FETCH_RETRY_BASE_MS = Number(process.env.PARSER_FETCH_RETRY_BASE_MS ?? 700);
+
+/** HTTP(S) прокси для запросов к t.me: PARSER_HTTPS_PROXY приоритетнее HTTPS_PROXY / https_proxy */
+function createParserProxyAgent(): ProxyAgent | undefined {
+	const raw =
+		process.env.PARSER_HTTPS_PROXY?.trim() ||
+		process.env.HTTPS_PROXY?.trim() ||
+		process.env.https_proxy?.trim();
+	if (!raw) return undefined;
+	try {
+		return new ProxyAgent(raw);
+	} catch (e) {
+		console.error('[scraper] Некорректный URL прокси (PARSER_HTTPS_PROXY / HTTPS_PROXY):', e);
+		return undefined;
+	}
+}
+
+const parserProxyAgent = createParserProxyAgent();
+if (parserProxyAgent) {
+	console.log('[scraper] Запросы к t.me идут через HTTP(S) прокси (PARSER_HTTPS_PROXY / HTTPS_PROXY)');
 }
 
 const RESERVED_TG = new Set([
@@ -22,6 +48,127 @@ const RESERVED_TG = new Set([
 	'settings',
 	'login'
 ]);
+
+function sleep(ms: number): Promise<void> {
+	return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function absolutizeTelegramAssetUrl(raw: string): string {
+	const value = raw.trim();
+	if (!value) return '';
+	if (value.startsWith('//')) return `https:${value}`;
+	if (value.startsWith('/')) return `https://t.me${value}`;
+	return value;
+}
+
+function pickBestFromSrcset(srcset: string): string {
+	const candidates = srcset
+		.split(',')
+		.map((item) => item.trim().split(/\s+/)[0] ?? '')
+		.filter(Boolean);
+	if (candidates.length === 0) return '';
+	return candidates[candidates.length - 1];
+}
+
+async function fetchWithRetry(url: string): Promise<Response | null> {
+	for (let attempt = 1; attempt <= FETCH_RETRIES; attempt++) {
+		const controller = new AbortController();
+		const timeout = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+		try {
+			const init: RequestInit & { dispatcher?: ProxyAgent } = {
+				headers: {
+					'User-Agent':
+						'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+					'Accept-Language': 'ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7'
+				},
+				signal: controller.signal
+			};
+			if (parserProxyAgent) init.dispatcher = parserProxyAgent;
+
+			const response = await fetch(url, init);
+			clearTimeout(timeout);
+
+			// Явный "не найдено" не ретраим.
+			if (response.status === 404) return response;
+			if (response.ok) return response;
+
+			// Для 429/5xx пробуем ещё раз.
+			if (response.status === 429 || response.status >= 500) {
+				if (attempt < FETCH_RETRIES) {
+					await sleep(FETCH_RETRY_BASE_MS * attempt);
+					continue;
+				}
+			}
+			return response;
+		} catch {
+			clearTimeout(timeout);
+			if (attempt < FETCH_RETRIES) {
+				await sleep(FETCH_RETRY_BASE_MS * attempt);
+				continue;
+			}
+			return null;
+		}
+	}
+	return null;
+}
+
+const IMAGE_PROBE_TIMEOUT_MS = Math.min(FETCH_TIMEOUT_MS, 12_000);
+
+/**
+ * Проверка, отдаёт ли URL контент (CDN фото Telegram и т.п.).
+ * Сначала HEAD, при неуспехе (кроме 404/410) — GET с Range.
+ * Использует тот же прокси, что и парсер t.me.
+ */
+export async function probeHttpUrlOk(url: string): Promise<boolean> {
+	async function once(method: 'HEAD' | 'GET', rangeBytes?: string): Promise<Response | null> {
+		for (let att = 1; att <= FETCH_RETRIES; att++) {
+			const controller = new AbortController();
+			const timeout = setTimeout(() => controller.abort(), IMAGE_PROBE_TIMEOUT_MS);
+			try {
+				const headers: Record<string, string> = {
+					'User-Agent':
+						'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+					Accept: '*/*'
+				};
+				if (rangeBytes) headers.Range = rangeBytes;
+				const init: RequestInit & { dispatcher?: ProxyAgent } = {
+					method,
+					headers,
+					signal: controller.signal
+				};
+				if (parserProxyAgent) init.dispatcher = parserProxyAgent;
+
+				const response = await fetch(url, init);
+				clearTimeout(timeout);
+
+				if (response.ok || response.status === 206) return response;
+				if (response.status === 404 || response.status === 410) return response;
+				if (response.status === 429 || response.status >= 500) {
+					if (att < FETCH_RETRIES) {
+						await sleep(FETCH_RETRY_BASE_MS * att);
+						continue;
+					}
+				}
+				return response;
+			} catch {
+				clearTimeout(timeout);
+				if (att < FETCH_RETRIES) {
+					await sleep(FETCH_RETRY_BASE_MS * att);
+					continue;
+				}
+				return null;
+			}
+		}
+		return null;
+	}
+
+	const head = await once('HEAD');
+	if (head && (head.ok || head.status === 206)) return true;
+	if (head && (head.status === 404 || head.status === 410)) return false;
+
+	const getRes = await once('GET', 'bytes=0-0');
+	return !!(getRes && (getRes.ok || getRes.status === 206));
+}
 
 function pickAuthorUsername($: cheerio.CheerioAPI, groupHandle: string): string | null {
 	const normalize = (value: string) =>
@@ -130,14 +277,9 @@ export async function scrapeMessageWithKind(
 ): Promise<ScrapeOutcome> {
 	try {
 		const url = `https://t.me/${groupHandle}/${messageId}?embed=1`;
-		const response = await fetch(url, {
-			headers: {
-				'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-				'Accept-Language': 'ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7'
-			}
-		});
+		const response = await fetchWithRetry(url);
 
-		if (!response.ok) return { kind: 'missing' };
+		if (!response || !response.ok) return { kind: 'missing' };
 
 		const html = await response.text();
 		const $ = cheerio.load(html);
@@ -165,17 +307,41 @@ export async function scrapeMessageWithKind(
 			return { kind: 'non_listing' };
 		}
 
+		// AI-классификация: фильтр не-объявлений + определение категории
+		const classified = await classifyListing(text);
+		if (!classified.isListing) {
+			return { kind: 'non_listing' };
+		}
+
 		const author = pickAuthorUsername($, groupHandle);
 		const dateAttr = $('.tgme_widget_message_date time').attr('datetime');
 		const date = dateAttr ? new Date(dateAttr) : new Date();
 
 		const images: string[] = [];
+		const pushImage = (candidate: string | undefined) => {
+			if (!candidate) return;
+			const value = absolutizeTelegramAssetUrl(candidate);
+			if (!value) return;
+			if (!images.includes(value)) images.push(value);
+		};
+
 		$('.tgme_widget_message_photo_wrap').each((_, el) => {
 			const style = $(el).attr('style');
-			const match = style?.match(/background-image:url\('([^']+)'\)/);
-			if (match && match[1]) {
-				images.push(match[1]);
-			}
+			const match = style?.match(/background-image\s*:\s*url\((['"]?)(.*?)\1\)/i);
+			if (match?.[2]) pushImage(match[2]);
+
+			const src = $(el).attr('src');
+			if (src) pushImage(src);
+
+			const srcset = $(el).attr('srcset');
+			if (srcset) pushImage(pickBestFromSrcset(srcset));
+		});
+
+		$('.tgme_widget_message_photo img').each((_, el) => {
+			const src = $(el).attr('src');
+			if (src) pushImage(src);
+			const srcset = $(el).attr('srcset');
+			if (srcset) pushImage(pickBestFromSrcset(srcset));
 		});
 
 		return {
@@ -187,7 +353,7 @@ export async function scrapeMessageWithKind(
 				images,
 				date,
 				author,
-				extracted: extractData(text, author || undefined, groupHandle)
+				extracted: extractData(text, author || undefined, groupHandle, classified.categorySlug)
 			}
 		};
 	} catch (error) {

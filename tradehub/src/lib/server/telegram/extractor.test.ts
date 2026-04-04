@@ -30,3 +30,17 @@ test('filters group handle from text links', () => {
 	const result = extractData(text, undefined, 'BatumiHub');
 	assert.equal(result.contact, 't.me/seller_name_here');
 });
+
+test('extracts price with лар (GEL)', () => {
+	const text = 'Флеш карта SD 32 Gb - 25 лар';
+	const result = extractData(text, undefined);
+	assert.equal(result.price, '25');
+	assert.equal(result.currency, 'GEL');
+});
+
+test('extracts price with лари before number', () => {
+	const text = 'Продам стол лари 80';
+	const result = extractData(text, undefined);
+	assert.equal(result.price, '80');
+	assert.equal(result.currency, 'GEL');
+});

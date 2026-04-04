@@ -1,0 +1,125 @@
+/**
+ * Прогоняет существующие активные объявления через AI-классификатор (Ollama).
+ * - NOT_LISTING → status = 'filtered'
+ * - listing     → обновляет categoryId
+ *
+ * Запуск: npm run parser:ai-reclassify
+ */
+
+import { db } from '../db';
+import { cities, listings } from '../db/schema';
+import { listingHasPhotosSql } from '../db/listing-photo-filter';
+import { and, asc, eq, gt, sql } from 'drizzle-orm';
+import { classifyListing } from './classifier';
+import * as dotenv from 'dotenv';
+import { resolve } from 'path';
+
+dotenv.config({ path: resolve(process.cwd(), '.env') });
+
+const BATCH_SIZE = 50;
+
+const SLUG_TO_ID: Record<string, number> = {
+	electronics: 1,
+	clothing: 2,
+	auto: 3,
+	furniture: 4,
+	realestate: 5,
+	services: 6,
+	kids: 7,
+	sport: 8,
+	other: 9,
+	animals: 37
+};
+
+async function updateListingsCounts() {
+	const allCities = await db.query.cities.findMany();
+	for (const city of allCities) {
+		const result = await db
+			.select({ count: sql<number>`count(*)::int` })
+			.from(listings)
+			.where(and(eq(listings.cityId, city.id), eq(listings.status, 'active'), listingHasPhotosSql));
+		const count = result[0]?.count ?? 0;
+		await db.update(cities).set({ listingsCount: count }).where(eq(cities.id, city.id));
+	}
+}
+
+async function main() {
+	const DRY_RUN = process.env.DRY_RUN === '1';
+	console.log(`🤖 AI-реклассификация${DRY_RUN ? ' (DRY RUN — изменений нет)' : ''}...`);
+	console.log('Символы: x=отфильтровано  c=категория изменена  .=без изменений  ?=ошибка Ollama\n');
+
+	let lastId = 0;
+	let scanned = 0;
+	let filtered = 0;
+	let recategorized = 0;
+	let errors = 0;
+
+	while (true) {
+		const batch = await db.query.listings.findMany({
+			where: and(eq(listings.status, 'active'), gt(listings.id, lastId)),
+			orderBy: [asc(listings.id)],
+			limit: BATCH_SIZE,
+			columns: { id: true, title: true, description: true, categoryId: true }
+		});
+
+		if (batch.length === 0) break;
+
+		for (const listing of batch) {
+			scanned++;
+			lastId = listing.id;
+
+			const text = [listing.title, listing.description ?? ''].filter(Boolean).join('\n');
+
+			let result;
+			try {
+				result = await classifyListing(text);
+			} catch {
+				errors++;
+				process.stdout.write('?');
+				continue;
+			}
+
+			if (!result.isListing) {
+				if (!DRY_RUN) {
+					await db
+						.update(listings)
+						.set({ status: 'filtered' })
+						.where(eq(listings.id, listing.id));
+				}
+				filtered++;
+				process.stdout.write('x');
+				continue;
+			}
+
+			const newCategoryId = SLUG_TO_ID[result.categorySlug] ?? 9;
+			if (listing.categoryId !== newCategoryId) {
+				if (!DRY_RUN) {
+					await db
+						.update(listings)
+						.set({ categoryId: newCategoryId })
+						.where(eq(listings.id, listing.id));
+				}
+				recategorized++;
+				process.stdout.write('c');
+			} else {
+				process.stdout.write('.');
+			}
+		}
+	}
+
+	if (!DRY_RUN) {
+		await updateListingsCounts();
+	}
+
+	console.log('\n\n✅ Готово');
+	console.log(`Проверено:            ${scanned}`);
+	console.log(`Отфильтровано (NOT):  ${filtered}`);
+	console.log(`Категория обновлена:  ${recategorized}`);
+	console.log(`Ошибки Ollama:        ${errors}`);
+	process.exit(0);
+}
+
+main().catch((e) => {
+	console.error('❌ Ошибка:', e);
+	process.exit(1);
+});

@@ -1,14 +1,17 @@
 #!/usr/bin/env bash
 set -euo pipefail
 # Сохранить .env с паролями БД между выкладками
-if [ -f /opt/tradehub/.env ]; then
-	cp /opt/tradehub/.env /root/tradehub.env.backup
+if [ -f /opt/teleposter/.env ]; then
+	cp /opt/teleposter/.env /root/teleposter.env.backup
+elif [ -f /opt/tradehub/.env ]; then
+	cp /opt/tradehub/.env /root/teleposter.env.backup
 fi
-rm -rf /opt/tradehub
-tar -xzf /root/tradehub-deploy.tar.gz -C /opt
-cd /opt/tradehub
-if [ -f /root/tradehub.env.backup ]; then
-	cp /root/tradehub.env.backup .env
+rm -rf /opt/teleposter /opt/tradehub
+tar -xzf /root/teleposter-deploy.tar.gz -C /opt
+mv /opt/tradehub /opt/teleposter
+cd /opt/teleposter
+if [ -f /root/teleposter.env.backup ]; then
+	cp /root/teleposter.env.backup .env
 else
 	cp -n .env.example .env || true
 fi
@@ -26,31 +29,54 @@ npm install
 npm run build
 
 # Схема БД (если DATABASE_URL в .env корректен)
+# --force автоматически подтверждает все изменения без интерактивного TTY
 if grep -qE '^DATABASE_URL=(postgres|postgresql)://' .env 2>/dev/null; then
-	npm run db:push || echo "⚠ db:push не выполнен — проверьте БД и запустите вручную: cd /opt/tradehub && npm run db:push"
+	npx drizzle-kit push --force || echo "⚠ db:push не выполнен — запустите вручную: cd /opt/teleposter && npx drizzle-kit push --force"
 fi
 
 # Веб-приложение (Node, порт 3000, за nginx)
-if [ -f deploy/systemd/tradehub.service ]; then
-	install -m 644 deploy/systemd/tradehub.service /etc/systemd/system/
+if [ -f deploy/systemd/teleposter.service ]; then
+	install -m 644 deploy/systemd/teleposter.service /etc/systemd/system/
 fi
 
-# Парсер Telegram: systemd timer (каждые ~30 мин после предыдущего запуска)
-if [ -f deploy/systemd/tradehub-parser.service ]; then
-	install -m 644 deploy/systemd/tradehub-parser.service /etc/systemd/system/
-	install -m 644 deploy/systemd/tradehub-parser.timer /etc/systemd/system/
+# Парсер Telegram: systemd timer (каждую минуту после предыдущего запуска; см. teleposter-parser.timer)
+if [ -f deploy/systemd/teleposter-parser.service ]; then
+	install -m 644 deploy/systemd/teleposter-parser.service /etc/systemd/system/
+	install -m 644 deploy/systemd/teleposter-parser.timer /etc/systemd/system/
+fi
+
+# Чекер актуальности объявлений: systemd timer (раз в час)
+if [ -f deploy/systemd/teleposter-checker.service ]; then
+	install -m 644 deploy/systemd/teleposter-checker.service /etc/systemd/system/
+	install -m 644 deploy/systemd/teleposter-checker.timer /etc/systemd/system/
+fi
+
+# Дедупликация в БД (раз в 12 ч): content_hash, контакт+заголовок, цена+первое фото
+if [ -f deploy/systemd/teleposter-dedupe.service ]; then
+	install -m 644 deploy/systemd/teleposter-dedupe.service /etc/systemd/system/
+	install -m 644 deploy/systemd/teleposter-dedupe.timer /etc/systemd/system/
 fi
 
 systemctl daemon-reload
-systemctl enable tradehub.service
-systemctl restart tradehub.service
-if [ -f /etc/systemd/system/tradehub-parser.timer ]; then
-	systemctl enable tradehub-parser.timer
-	systemctl restart tradehub-parser.timer
-	echo "→ tradehub-parser.timer: $(systemctl is-active tradehub-parser.timer || true)"
+systemctl enable teleposter.service
+systemctl restart teleposter.service
+if [ -f /etc/systemd/system/teleposter-parser.timer ]; then
+	systemctl enable teleposter-parser.timer
+	systemctl restart teleposter-parser.timer
+	echo "→ teleposter-parser.timer: $(systemctl is-active teleposter-parser.timer || true)"
+fi
+if [ -f /etc/systemd/system/teleposter-checker.timer ]; then
+	systemctl enable teleposter-checker.timer
+	systemctl restart teleposter-checker.timer
+	echo "→ teleposter-checker.timer: $(systemctl is-active teleposter-checker.timer || true)"
+fi
+if [ -f /etc/systemd/system/teleposter-dedupe.timer ]; then
+	systemctl enable teleposter-dedupe.timer
+	systemctl restart teleposter-dedupe.timer
+	echo "→ teleposter-dedupe.timer: $(systemctl is-active teleposter-dedupe.timer || true)"
 fi
 
 sleep 2
-echo "→ tradehub.service: $(systemctl is-active tradehub.service || true)"
+echo "→ teleposter.service: $(systemctl is-active teleposter.service || true)"
 curl -s -o /dev/null -w "HTTP :3000 /admin/groups: %{http_code}\n" http://127.0.0.1:3000/admin/groups || true
-curl -s -o /dev/null -w "HTTP :80 /admin/groups (nginx): %{http_code}\n" http://127.0.0.1/admin/groups || true
+curl -s -o /dev/null -w "HTTPS teleposter.online /admin/groups: %{http_code}\n" https://teleposter.online/admin/groups || true

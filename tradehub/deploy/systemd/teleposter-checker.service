@@ -1,0 +1,19 @@
+[Unit]
+Description=teleposter — проверка актуальности объявлений (check-expired)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+EnvironmentFile=-/opt/teleposter/.env
+WorkingDirectory=/opt/teleposter
+# Блокировка: два прогона одновременно не нужны
+ExecStart=/bin/bash -lc 'exec 201>/run/teleposter-parser.checker.lock; flock -n 201 || exit 0; exec npm run parser:check-expired'
+User=root
+Group=root
+StandardOutput=journal
+StandardError=journal
+TimeoutStartSec=3600
+
+[Install]
+WantedBy=multi-user.target

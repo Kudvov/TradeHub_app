@@ -3,7 +3,7 @@
 #
 # DEPLOY_HOST=root@155.212.134.183
 # DEPLOY_SSH_PORT=22
-# DEPLOY_SSH_KEY=/Users/you/.ssh/tradehub_deploy
+# DEPLOY_SSH_KEY=/Users/you/.ssh/teleposter_deploy
 #
 # В Cursor: Settings → переопредели переменные для терминала/агента (или ~/.zshrc).
 # Для агента без интерактива: ключ в файле или DEPLOY_SSH_KEY_CONTENT в секретах.

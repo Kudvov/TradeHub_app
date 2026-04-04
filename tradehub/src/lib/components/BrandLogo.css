@@ -1,0 +1,13 @@
+.brand-logo-root {
+	display: inline-flex;
+	align-items: center;
+	color: var(--text-primary);
+	line-height: 0;
+	flex-shrink: 0;
+}
+
+.brand-logo-root svg {
+	display: block;
+	height: var(--brand-logo-height, 32px);
+	width: auto;
+}

@@ -63,10 +63,25 @@ function collectUsernamesFromText(text: string, groupHandle?: string): string[] 
 	return out;
 }
 
+// Соответствует порядку вставки в seed.ts + миграции
+const SLUG_TO_CATEGORY_ID: Record<string, number> = {
+	electronics: 1,
+	clothing: 2,
+	auto: 3,
+	furniture: 4,
+	realestate: 5,
+	services: 6,
+	kids: 7,
+	sport: 8,
+	other: 9,
+	animals: 37
+};
+
 export function extractData(
 	text: string,
 	username: string | undefined,
-	groupUsername?: string
+	groupUsername?: string,
+	categorySlug?: string
 ): ExtractedData {
 	const isValidTgUsername = isValidTelegramPublicUsername;
 	const groupNorm = normalizeGroupHandle(groupUsername);
@@ -97,7 +112,7 @@ export function extractData(
 	let currency: ExtractedData['currency'] = null;
 
 	const priceMatch = text.match(
-		/(?:(?:gel|lari|лари|лар(?:ов|и|ей)?\b|₾|usd|\$|rub|руб|₽)\s*(\d+)|(\d+)\s*(?:gel|lari|лари|лар(?:ов|и|ей)?\b|₾|usd|\$|rub|руб|₽))/i
+		/(?:(?:gel|lari|лари|лар(?:ов|и|ей)?|₾|usd|\$|rub|руб|₽)\s*(\d+)|(\d+)\s*(?:gel|lari|лари|лар(?:ов|и|ей)?|₾|usd|\$|rub|руб|₽))/i
 	);
 	if (priceMatch) {
 		price = (priceMatch[1] || priceMatch[2]).trim();
@@ -129,35 +144,8 @@ export function extractData(
 		contact = phoneMatch[0].replace(/\s/g, '');
 	}
 
-	// 3. Категоризация по ключевым словам
-	const tL = text.toLowerCase();
-	let categoryId = null;
-
-	// Мебель и бытовая техника
-	if (tL.match(/кровать|матрас|диван|шкаф|комод|тумбочк|вешалк|икеа|ikea|мебель|холодильник|стиральн|посудомо|пылесос|микроволновк|духовк|чайник|кастрюл|сковород|посуд[аы]/)) {
-		categoryId = 4;
-	// Электроника (не «телефон» как контакт, а конкретные устройства)
-	} else if (tL.match(/iphone|macbook|ipad|airpods|apple watch|samsung|xiaomi(?! самокат| electric)|huawei|смартфон|ноутбук|планшет|телевизор|монитор|видеокарт|процессор|playstation|ps[2345]\b|xbox|приставк|наушник|микрофон|bluetooth.*колонк|колонк.*jbl|jbl\b|gopro|фотоаппарат|объектив|роутер|принтер|powerbank|power bank|повербанк/)) {
-		categoryId = 1;
-	// Авто (конкретные марки и автотермины, не широкое «авто»)
-	} else if (tL.match(/toyota|bmw|mercedes|honda|hyundai|kia\b|ford\b|renault|volkswagen|audi\b|mitsubishi|nissan|mazda|lada|автомобил|продам авто|куплю авто|резина\b|шины\b|колёса\b|колеса\b|автозапчаст|запчаст|бампер|двигател|кузов|капот/)) {
-		categoryId = 3;
-	// Недвижимость
-	} else if (tL.match(/квартир|студию|студия|однушк|двушк|трёшк|апартамент|сдаю\b|сдам\b|сдаётся|снять\b|снимаю|посуточно|аренда\b|арендую|комнату\b/)) {
-		categoryId = 5;
-	// Детские товары
-	} else if (tL.match(/коляск|детск[аяий]\b|детского|детские\b|ребёнку|ребенку|малыш|новорождён|новорожден|игрушк|памперс|подгузник/)) {
-		categoryId = 7;
-	// Спорт
-	} else if (tL.match(/велосипед|самокат|электросамокат|сапборд|сноуборд|лыж[иа]\b|скейт|ролик[иов]\b|тренажер|гантел|штанг[аи]\b|гири\b|беговая дорожка|боксёрск|боксерск|спортивн.*инвентар/)) {
-		categoryId = 8;
-	// Одежда и обувь
-	} else if (tL.match(/одежда|обувь|куртк|пальто|пиджак|пуховик|дублёнк|плащ\b|платье|юбк|джинс|брюки|штаны|шорты|блузк|рубашк|свитер|толстовк|худи\b|футболк|комбинезон|кроссовк|кед[ыа]\b|ботинк|туфл|сапог[иа]|сандал|шлёпк|шлепк|балетк|мокасин|шапк|шарф\b|перчатк|носки\b|сумка\b|рюкзак|жилет/)) {
-		categoryId = 2;
-	// Услуги (последним, чтобы продажа товаров шла выше)
-	} else if (tL.match(/мастер на час|сантехни|(?<!\w)электрика\b|(?<!\w)электрики\b|монтаж|установка\b|уборка\b|клининг|репетитор|обучение\b|курсы\b|курс[ыа] |грузчик|парикмахер|маникюр|педикюр|стрижка\b|фотосессия|изготовлени|вскрытие|слесарн|доставка\b|перевозк/)) {
-		categoryId = 6;
-	}
+	// 3. Категория — задаётся AI-классификатором через categorySlug
+	const categoryId = categorySlug ? (SLUG_TO_CATEGORY_ID[categorySlug] ?? null) : null;
 
 	return {
 		title,

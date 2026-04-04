@@ -5,20 +5,38 @@ const currencySymbols: Record<string, string> = {
 	RUB: '₽'
 };
 
-export function formatPrice(price: string | null | undefined, currency: string = 'GEL'): string {
-	if (!price) return 'Цена не указана';
+const PRICE_NOT_SET: Record<string, string> = {
+	ru: 'Цена не указана',
+	en: 'Price not set',
+	ka: 'ფასი არ არის'
+};
+
+export function formatPrice(
+	price: string | null | undefined,
+	currency: string = 'GEL',
+	locale: string = 'ru'
+): string {
+	const fallback = PRICE_NOT_SET[locale] ?? PRICE_NOT_SET.ru;
+	if (!price) return fallback;
 	const num = parseFloat(price);
-	if (isNaN(num)) return 'Цена не указана';
+	if (isNaN(num)) return fallback;
 
 	const symbol = currencySymbols[currency] ?? currency;
-	const formatted = num.toLocaleString('ru-RU', {
+	const localeCode = locale === 'ka' ? 'ka-GE' : locale === 'en' ? 'en-US' : 'ru-RU';
+	const formatted = num.toLocaleString(localeCode, {
 		minimumFractionDigits: 0,
 		maximumFractionDigits: num % 1 === 0 ? 0 : 2
 	});
 	return `${formatted} ${symbol}`;
 }
 
-export function formatDate(date: Date | string | null): string {
+const DATE_LABELS: Record<string, { justNow: string; min: string; hour: string; day: string }> = {
+	ru: { justNow: 'только что', min: 'мин. назад', hour: 'ч. назад', day: 'дн. назад' },
+	en: { justNow: 'just now', min: 'min. ago', hour: 'h. ago', day: 'd. ago' },
+	ka: { justNow: 'ახლახან', min: 'წთ. წინ', hour: 'სთ. წინ', day: 'დ. წინ' }
+};
+
+export function formatDate(date: Date | string | null, locale: string = 'ru'): string {
 	if (!date) return '';
 	const d = typeof date === 'string' ? new Date(date) : date;
 	const now = new Date();
@@ -28,12 +46,15 @@ export function formatDate(date: Date | string | null): string {
 	const hours = Math.floor(diff / 3_600_000);
 	const days = Math.floor(diff / 86_400_000);
 
-	if (minutes < 1) return 'только что';
-	if (minutes < 60) return `${minutes} мин. назад`;
-	if (hours < 24) return `${hours} ч. назад`;
-	if (days < 7) return `${days} дн. назад`;
+	const labels = DATE_LABELS[locale] ?? DATE_LABELS.ru;
+	const localeCode = locale === 'ka' ? 'ka-GE' : locale === 'en' ? 'en-US' : 'ru-RU';
 
-	return d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short', year: 'numeric' });
+	if (minutes < 1) return labels.justNow;
+	if (minutes < 60) return `${minutes} ${labels.min}`;
+	if (hours < 24) return `${hours} ${labels.hour}`;
+	if (days < 7) return `${days} ${labels.day}`;
+
+	return d.toLocaleDateString(localeCode, { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
 export function truncate(text: string, maxLength: number = 120): string {

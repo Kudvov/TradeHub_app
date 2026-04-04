@@ -1,19 +1,19 @@
 [Unit]
-Description=TradeHub (SvelteKit / Node)
+Description=teleposter (SvelteKit / Node)
 After=network-online.target
 Wants=network-online.target
 
 [Service]
 Type=simple
 User=root
-WorkingDirectory=/opt/tradehub
-EnvironmentFile=-/opt/tradehub/.env
+WorkingDirectory=/opt/teleposter
+EnvironmentFile=-/opt/teleposter/.env
 Environment=NODE_ENV=production
 Environment=PORT=3000
 Environment=HOST=127.0.0.1
 # Через nginx: иначе origin считается https по умолчанию → CSRF «Cross-site POST» при доступе по http
 Environment=PROTOCOL_HEADER=x-forwarded-proto
-ExecStart=/usr/bin/env node /opt/tradehub/build/index.js
+ExecStart=/usr/bin/env node /opt/teleposter/build/index.js
 Restart=on-failure
 RestartSec=5
 StandardOutput=journal

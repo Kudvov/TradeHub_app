@@ -1,0 +1,13 @@
+[Unit]
+Description=Периодический поиск дублей объявлений teleposter (БД)
+
+[Timer]
+# Первый запуск через 25 мин после загрузки, далее каждые 12 ч
+OnBootSec=25min
+OnUnitActiveSec=12h
+AccuracySec=1min
+Persistent=true
+Unit=teleposter-dedupe.service
+
+[Install]
+WantedBy=timers.target

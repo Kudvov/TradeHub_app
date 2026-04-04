@@ -1,5 +1,5 @@
 {
-	"name": "tradehub",
+	"name": "teleposter",
 	"private": true,
 	"version": "0.0.1",
 	"type": "module",
@@ -22,9 +22,15 @@
 		"db:seed": "tsx src/lib/server/db/seed.ts",
 		"db:studio": "drizzle-kit studio",
 		"parser:sync": "tsx src/lib/server/telegram/sync.ts",
+		"parser:refresh-images": "tsx src/lib/server/telegram/refresh-images.ts",
 		"parser:test": "tsx src/lib/server/telegram/test.ts",
 		"parser:fix-contacts": "tsx src/lib/server/telegram/fix-contacts.ts",
-		"parser:reparse": "tsx src/lib/server/telegram/reparse-listings.ts"
+		"parser:reparse": "tsx src/lib/server/telegram/reparse-listings.ts",
+		"parser:cleanup-duplicates": "tsx src/lib/server/telegram/cleanup-duplicates.ts",
+		"parser:check-expired": "tsx src/lib/server/telegram/check-expired.ts",
+		"parser:ai-reclassify": "tsx src/lib/server/telegram/ai-reclassify.ts",
+		"parser:translate": "tsx src/lib/server/telegram/translate-listings.ts",
+		"threads:post": "tsx src/lib/server/threads/post-listing.ts"
 	},
 	"devDependencies": {
 		"@eslint/compat": "^2.0.3",
@@ -52,6 +58,10 @@
 		"vite": "^7.3.1"
 	},
 	"dependencies": {
-		"cheerio": "^1.2.0"
+		"@anthropic-ai/sdk": "^0.82.0",
+		"@sentry/sveltekit": "^10.47.0",
+		"cheerio": "^1.2.0",
+		"svelte-i18n": "^4.0.1",
+		"undici": "^7.24.7"
 	}
 }

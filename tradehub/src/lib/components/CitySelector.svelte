@@ -1,4 +1,5 @@
 <script lang="ts">
+	import './CitySelector.css';
 	import type { City } from '$lib/types';
 
 	let { cities = [] }: { cities: City[] } = $props();
@@ -27,54 +28,3 @@
 		{/each}
 	</div>
 </section>
-
-<style>
-	.city-card {
-		display: flex;
-		align-items: center;
-		gap: 1rem;
-		padding: 1.25rem;
-		text-decoration: none;
-		color: inherit;
-	}
-
-	.city-icon-wrap {
-		width: 48px;
-		height: 48px;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		border-radius: var(--radius-md);
-		background: var(--accent-subtle);
-		font-size: 1.5rem;
-		flex-shrink: 0;
-	}
-
-	.city-info {
-		flex: 1;
-		min-width: 0;
-	}
-
-	.city-name {
-		font-size: 1rem;
-		font-weight: 600;
-		line-height: 1.3;
-		color: var(--text-primary);
-	}
-
-	.city-count {
-		font-size: 0.8125rem;
-		color: var(--text-muted);
-	}
-
-	.city-arrow {
-		color: var(--text-muted);
-		transition: all var(--transition-fast);
-		flex-shrink: 0;
-	}
-
-	.city-card:hover .city-arrow {
-		color: var(--accent);
-		transform: translateX(4px);
-	}
-</style>

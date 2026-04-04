@@ -1,0 +1,79 @@
+/* Анимированная градиентная обводка 2px — премиум-группы (@BatumiTradeHub, @TbilisiTradeHub) */
+@keyframes premium-gradient-flow {
+	0% {
+		background-position: 0% 50%;
+	}
+	50% {
+		background-position: 100% 50%;
+	}
+	100% {
+		background-position: 0% 50%;
+	}
+}
+
+.listing-card-premium-host {
+	position: relative;
+	height: 100%;
+	min-height: 0;
+}
+
+.listing-card-premium-host .listing-card {
+	height: 100%;
+}
+
+.premium-gradient-border {
+	position: relative;
+	--premium-border-width: 2px;
+}
+
+.premium-gradient-border.card {
+	border-color: transparent;
+}
+
+.premium-gradient-border.card:hover {
+	border-color: transparent;
+}
+
+.premium-gradient-border::after {
+	content: '';
+	position: absolute;
+	inset: 0;
+	border-radius: inherit;
+	padding: var(--premium-border-width);
+	background: linear-gradient(
+		115deg,
+		color-mix(in srgb, var(--gray-700) 35%, #8b5cf6),
+		color-mix(in srgb, var(--gray-600) 30%, #22d3ee),
+		color-mix(in srgb, var(--gray-700) 40%, #eab308),
+		color-mix(in srgb, var(--gray-600) 28%, #ec4899),
+		color-mix(in srgb, var(--gray-700) 38%, #a78bfa),
+		color-mix(in srgb, var(--gray-700) 35%, #8b5cf6)
+	);
+	background-size: 320% 320%;
+	animation: premium-gradient-flow 5s ease infinite;
+	-webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+	-webkit-mask-composite: xor;
+	mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+	mask-composite: exclude;
+	pointer-events: none;
+	z-index: 2;
+}
+
+html.dark .premium-gradient-border::after {
+	background: linear-gradient(
+		115deg,
+		color-mix(in srgb, var(--gray-400) 25%, #a78bfa),
+		color-mix(in srgb, var(--gray-400) 20%, #22d3ee),
+		color-mix(in srgb, var(--gray-300) 22%, #fbbf24),
+		color-mix(in srgb, var(--gray-400) 18%, #f472b6),
+		color-mix(in srgb, var(--gray-300) 24%, #c4b5fd),
+		color-mix(in srgb, var(--gray-400) 25%, #a78bfa)
+	);
+	background-size: 320% 320%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.premium-gradient-border::after {
+		animation: none;
+	}
+}

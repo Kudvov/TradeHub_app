@@ -1,0 +1,40 @@
+name: Deploy to VPS
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    name: Build & Deploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: tradehub/package-lock.json
+
+      - name: Install dependencies
+        working-directory: tradehub
+        run: npm ci
+
+      - name: Type check
+        working-directory: tradehub
+        run: npm run check
+
+      - name: Run unit tests
+        working-directory: tradehub
+        run: npm test
+
+      - name: Deploy to server
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_SSH_KEY_CONTENT: ${{ secrets.DEPLOY_SSH_KEY }}
+        run: bash tradehub/scripts/deploy-to-server.sh

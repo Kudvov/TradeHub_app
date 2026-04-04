@@ -1,0 +1,128 @@
+.premium-add-cta {
+	display: flex;
+	justify-content: flex-start;
+}
+
+.premium-add-btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	padding: 0.45rem 0.85rem;
+	font-size: 0.8125rem;
+	font-weight: 600;
+	line-height: 1.2;
+	white-space: nowrap;
+	color: #fff;
+	background: var(--brand-blue);
+	border: none;
+	border-radius: var(--radius-md);
+	cursor: pointer;
+	-webkit-tap-highlight-color: transparent;
+	box-shadow: var(--shadow-sm);
+	transition:
+		background var(--transition-fast),
+		box-shadow var(--transition-fast),
+		transform 0.08s ease;
+}
+
+.premium-add-btn:hover {
+	background: var(--brand-blue-hover);
+	box-shadow: var(--shadow-md);
+}
+
+.premium-add-btn:active {
+	transform: translateY(1px);
+	box-shadow: var(--shadow-sm);
+}
+
+.premium-add-btn:focus-visible {
+	outline: 2px solid var(--brand-blue);
+	outline-offset: 2px;
+}
+
+.premium-add-overlay {
+	position: fixed;
+	inset: 0;
+	z-index: 1200;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: max(1rem, env(safe-area-inset-top, 0px)) 1rem max(1rem, env(safe-area-inset-bottom, 0px));
+	overflow-y: auto;
+	-webkit-overflow-scrolling: touch;
+	background: var(--overlay-50);
+	backdrop-filter: blur(4px);
+	-webkit-backdrop-filter: blur(4px);
+}
+
+.premium-add-modal {
+	width: 100%;
+	max-width: 26rem;
+	max-height: min(90dvh, calc(100dvh - 2rem));
+	overflow-y: auto;
+	flex-shrink: 0;
+	background: var(--bg-card);
+	border: 1px solid var(--border);
+	border-radius: var(--radius-xl);
+	box-shadow: var(--shadow-lg);
+}
+
+.premium-add-modal-head {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: 0.75rem;
+	padding: 1rem 1rem 0;
+}
+
+.premium-add-title {
+	margin: 0;
+	font-size: 1.125rem;
+	font-weight: 600;
+	color: var(--text-primary);
+}
+
+.premium-add-close {
+	flex-shrink: 0;
+	border: none;
+	background: transparent;
+	color: var(--text-muted);
+	font-size: 1.25rem;
+	line-height: 1;
+	cursor: pointer;
+	padding: 0.15rem 0.35rem;
+	border-radius: var(--radius-sm);
+}
+
+.premium-add-close:hover {
+	color: var(--text-primary);
+	background: var(--accent-subtle);
+}
+
+.premium-add-body {
+	padding: 0.75rem 1rem 1rem;
+	font-size: 0.9375rem;
+	line-height: 1.55;
+	color: var(--text-secondary);
+}
+
+.premium-add-body p {
+	margin: 0 0 0.75rem;
+}
+
+.premium-add-body p:last-child {
+	margin-bottom: 0;
+}
+
+.premium-add-note {
+	font-size: 0.875rem;
+	color: var(--text-muted);
+}
+
+.premium-add-actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+	justify-content: flex-end;
+	padding: 0 1rem 1rem;
+}

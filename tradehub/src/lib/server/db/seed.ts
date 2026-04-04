@@ -45,29 +45,34 @@ async function seed() {
 	console.log(`  ✅ Categories: ${insertedCategories.length} inserted`);
 
 	// ── Telegram Groups ──
-	const tbilisiId = insertedCities.find((c) => c.slug === 'tbilisi')?.id ?? 1;
 	const batumiId = insertedCities.find((c) => c.slug === 'batumi')?.id ?? 2;
+	const tbilisiId = insertedCities.find((c) => c.slug === 'tbilisi')?.id ?? 1;
 
 	const insertedGroups = await db
 		.insert(telegramGroups)
 		.values([
-		// startMessageId: с какого ID начинать парсинг истории вниз (0 = автоопределение)
-		// lastMessageId / startMessageId — как в админке (актуальные курсоры)
-		{ title: 'Batumi Trade Hub', username: 'BatumiTradeHub', cityId: batumiId, lastMessageId: 7777, startMessageId: 7777 },
-		{ title: 'baraholka_batumi_home', username: 'baraholka_batumi_home', cityId: batumiId, lastMessageId: 1, startMessageId: 0 },
-		{ title: 'baraholka_batumi_home_chanel', username: 'baraholka_batumi_home_chanel', cityId: batumiId, lastMessageId: 60049, startMessageId: 60049 },
-		{ title: 'baraholka_avito_batumi', username: 'baraholka_avito_batumi', cityId: batumiId, lastMessageId: 19496, startMessageId: 19496 },
-		{ title: 'baraholka_ge', username: 'baraholka_ge', cityId: batumiId, lastMessageId: 1, startMessageId: 0 },
-		{ title: 'baraholka_batum', username: 'baraholka_batum', cityId: batumiId, lastMessageId: 105903, startMessageId: 105903 },
-		{ title: 'Барахолка Батуми', username: 'batumi_baraholka', cityId: batumiId, lastMessageId: 1, startMessageId: 0 },
-		{ title: 'Batumi helps', username: 'Batumi_helps', cityId: batumiId, lastMessageId: 2299485, startMessageId: 2299485 },
-		{ title: 'Барахолка Тбилиси', username: 'tbilisi_baraholka', cityId: tbilisiId, lastMessageId: 32, startMessageId: 32 },
-		{ title: 'Тбилиси Купи-Продай', username: 'tbilisi_buy_sell', cityId: tbilisiId, lastMessageId: 100, startMessageId: 100 },
-		{ title: 'baraholka_tbilis', username: 'baraholka_tbilis', cityId: tbilisiId, lastMessageId: 10285, startMessageId: 10285 },
-		{ title: 'avito_baraholka_tbilisi', username: 'avito_baraholka_tbilisi', cityId: tbilisiId, lastMessageId: 1028376, startMessageId: 1028376 },
-		{ title: 'baraholka_tbilisi', username: 'baraholka_tbilisi', cityId: tbilisiId, lastMessageId: 472283, startMessageId: 472283 },
-		{ title: 'tbilisi_market', username: 'tbilisi_market', cityId: tbilisiId, lastMessageId: 10515, startMessageId: 10515 },
-		{ title: 'Tbilisi Trade Hub', username: 'TbilisiTradeHub', cityId: tbilisiId, lastMessageId: 103, startMessageId: 103 }
+			// Премиум-группы: lastMessageId=1 + startMessageId=0 → первый прогон sync.ts.
+			{
+				title: 'Batumi Trade Hub',
+				username: 'BatumiTradeHub',
+				cityId: batumiId,
+				lastMessageId: 1,
+				startMessageId: 0
+			},
+			{
+				title: 'Tbilisi Trade Hub',
+				username: 'TbilisiTradeHub',
+				cityId: tbilisiId,
+				lastMessageId: 1,
+				startMessageId: 0
+			},
+			{
+				title: 'Batumi helps',
+				username: 'Batumi_helps',
+				cityId: batumiId,
+				lastMessageId: 2301897,
+				startMessageId: 2301897
+			}
 		])
 		.onConflictDoNothing()
 		.returning();

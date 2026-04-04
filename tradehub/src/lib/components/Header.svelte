@@ -1,5 +1,10 @@
 <script lang="ts">
-	import ThemeToggle from './ThemeToggle.svelte';
+	import './Header.css';
+	import BrandLogo from './BrandLogo.svelte';
+	import PremiumAddListingCta from './PremiumAddListingCta.svelte';
+	import LanguageSwitcher from './LanguageSwitcher.svelte';
+	import { _ } from 'svelte-i18n';
+	import type { PremiumCitySlug } from '$lib/premium-group';
 	import { page } from '$app/stores';
 
 	let {
@@ -9,157 +14,42 @@
 	} = $props();
 
 	let currentSlug = $derived($page.url.pathname.split('/').filter(Boolean)[0] ?? '');
+	const premiumCitySlug = $derived(
+		currentSlug === 'batumi' || currentSlug === 'tbilisi' ? (currentSlug as PremiumCitySlug) : null
+	);
 </script>
 
 <header class="header">
-	<div class="container header-inner">
-		<a href="/" class="logo" id="header-logo">
-			<span class="logo-text">Trade<span class="logo-accent">Hub</span></span>
+	<div class="container header-inner" class:header-inner--premium-cta={premiumCitySlug !== null}>
+		<a href="/" class="logo" id="header-logo" aria-label="teleposter — главная">
+			<BrandLogo height={34} />
 		</a>
 
-		<nav class="header-nav" id="header-nav">
+		<nav class="header-nav" id="header-nav" aria-label="Выбор города">
 			{#each cities as city (city.id)}
 				<a
 					href="/{city.slug}"
-					class="city-pill"
-					class:active={currentSlug === city.slug}
+					class="city-btn"
+					class:city-btn--active={currentSlug === city.slug}
 					aria-current={currentSlug === city.slug ? 'page' : undefined}
 				>
-					{city.name}
-					<span class="city-count" title="Активных объявлений в городе">{(city.listingsCount ?? 0).toLocaleString('ru-RU')}</span>
+					<span class="city-btn-text">{$_(`city_${city.slug}`) || city.name}</span>
+					<span class="city-count" title="Активные объявления в ленте города">{(city.listingsCount ?? 0).toLocaleString('ru-RU')}</span>
 					{#if city.newCount > 0}
-						<span class="city-new" title="Новых объявлений за последние 24 часа">+{city.newCount} за 24ч</span>
+						<span class="city-new">{$_('header_new_24h', { values: { count: city.newCount } })}</span>
 					{/if}
 				</a>
 			{/each}
 		</nav>
 
-		<div class="header-actions">
-			<ThemeToggle />
+		<div class="header-lang">
+			<LanguageSwitcher />
 		</div>
+
+		{#if premiumCitySlug}
+			<div class="header-premium-cta">
+				<PremiumAddListingCta citySlug={premiumCitySlug} />
+			</div>
+		{/if}
 	</div>
 </header>
-
-<style>
-	.header {
-		position: sticky;
-		top: 0;
-		z-index: 100;
-		background: var(--header-glass);
-		backdrop-filter: blur(8px);
-		transition: background var(--transition-base);
-	}
-
-	.header-inner {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		height: 64px;
-		gap: 1rem;
-	}
-
-	.logo {
-		display: flex;
-		align-items: center;
-		text-decoration: none;
-		color: var(--text-primary);
-		font-weight: 600;
-		font-size: 1.0625rem;
-		letter-spacing: -0.02em;
-		flex-shrink: 0;
-	}
-
-	.logo:hover {
-		color: var(--text-primary);
-	}
-
-	.logo-accent {
-		font-weight: 500;
-		color: var(--text-muted);
-	}
-
-	.header-nav {
-		display: flex;
-		align-items: center;
-		gap: 0.375rem;
-		flex: 1;
-		justify-content: center;
-		min-width: 0;
-	}
-
-	.city-pill {
-		display: inline-flex;
-		align-items: center;
-		gap: 0.35rem;
-		padding: 0.375rem 0.65rem;
-		border-radius: var(--radius-md);
-		font-size: 0.8125rem;
-		font-weight: 500;
-		color: var(--text-secondary);
-		border: 1px solid var(--border);
-		background: transparent;
-		transition: border-color var(--transition-fast), color var(--transition-fast);
-		text-decoration: none;
-		white-space: nowrap;
-		flex-wrap: nowrap;
-	}
-
-	.city-pill:hover {
-		color: var(--text-primary);
-		border-color: var(--border-hover);
-	}
-
-	.city-pill.active {
-		color: var(--text-primary);
-		border-color: var(--text-primary);
-		font-weight: 600;
-	}
-
-	.city-count {
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		min-width: 1.125rem;
-		min-height: 1.125rem;
-		padding: 0 0.3rem;
-		background: var(--accent-subtle);
-		color: var(--text-secondary);
-		font-size: 0.6875rem;
-		font-weight: 600;
-		border-radius: var(--radius-sm);
-		line-height: 1;
-	}
-
-	.city-new {
-		font-size: 0.625rem;
-		font-weight: 500;
-		color: var(--text-muted);
-		letter-spacing: -0.02em;
-		white-space: nowrap;
-	}
-
-	.header-actions {
-		display: flex;
-		align-items: center;
-		gap: 0.5rem;
-		flex-shrink: 0;
-	}
-
-	@media (max-width: 480px) {
-		.header-inner {
-			gap: 0.5rem;
-		}
-
-		.header-nav {
-			justify-content: flex-start;
-			overflow-x: auto;
-			scrollbar-width: none;
-			-ms-overflow-style: none;
-		}
-
-		.header-nav::-webkit-scrollbar {
-			display: none;
-		}
-
-	}
-</style>

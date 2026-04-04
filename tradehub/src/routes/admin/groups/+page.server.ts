@@ -1,4 +1,5 @@
 import { fail } from '@sveltejs/kit';
+import { getParserJournalBundle } from '$lib/server/parser-journal';
 import { db } from '$lib/server/db';
 import { bannedAuthors, cities, listingReports, listings, telegramGroups } from '$lib/server/db/schema';
 import { asc, desc, eq, inArray, sql } from 'drizzle-orm';
@@ -7,9 +8,9 @@ import { exec } from 'node:child_process';
 import { promisify } from 'node:util';
 
 const execAsync = promisify(exec);
-const ADMIN_LOGIN = 'admin';
-const ADMIN_PASSWORD = 'Ghjnjnbg211';
-const ADMIN_COOKIE = 'tradehub_admin_session';
+const ADMIN_LOGIN = process.env.ADMIN_LOGIN ?? 'admin';
+const ADMIN_PASSWORD = process.env.ADMIN_KEY ?? '';
+const ADMIN_COOKIE = 'teleposter_admin_session';
 const ADMIN_COOKIE_VALUE = 'ok';
 
 function normalizeUsername(value: string): string {
@@ -51,11 +52,11 @@ async function execSystemctlLine(cmd: string): Promise<string> {
 async function getParserState() {
 	try {
 		const [timerActive, timerEnabled, serviceActive, nextRunRaw] = await Promise.all([
-			execSystemctlLine('systemctl is-active tradehub-parser.timer'),
-			execSystemctlLine('systemctl is-enabled tradehub-parser.timer'),
-			execSystemctlLine('systemctl is-active tradehub-parser.service'),
+			execSystemctlLine('systemctl is-active teleposter-parser.timer'),
+			execSystemctlLine('systemctl is-enabled teleposter-parser.timer'),
+			execSystemctlLine('systemctl is-active teleposter-parser.service'),
 			execSystemctlLine(
-				"systemctl list-timers --all --no-legend tradehub-parser.timer 2>/dev/null | awk '{print $1\" \"$2\" \"$3}'"
+				"systemctl list-timers --all --no-legend teleposter-parser.timer 2>/dev/null | awk '{print $1\" \"$2\" \"$3}'"
 			)
 		]);
 
@@ -88,6 +89,7 @@ export const load: PageServerLoad = async ({ cookies }) => {
 			cities: [],
 			groups: [],
 			parser: await getParserState(),
+			parserLog: '',
 			cityAnalytics: [],
 			groupAnalytics: [],
 			reports: []
@@ -102,6 +104,7 @@ export const load: PageServerLoad = async ({ cookies }) => {
 		}),
 		getParserState()
 	]);
+	const parserLog = parser.available ? await getParserJournalBundle() : '';
 
 	const groupRows = await db
 		.select({
@@ -205,6 +208,7 @@ export const load: PageServerLoad = async ({ cookies }) => {
 		cities: allCities,
 		groups: stripBigInts(groups),
 		parser,
+		parserLog,
 		cityAnalytics,
 		groupAnalytics,
 		reports: stripBigInts(reports)
@@ -337,17 +341,47 @@ export const actions: Actions = {
 	parserRunNow: async ({ cookies }) => {
 		if (!ensureAuth(cookies)) return fail(401, { error: 'Требуется авторизация.' });
 		try {
-			await execAsync('systemctl start tradehub-parser.service');
+			await execAsync('systemctl start teleposter-parser.service');
 			return { success: true, message: 'Парсер запущен вручную.' };
 		} catch {
 			return fail(500, { error: 'Не удалось запустить парсер.' });
 		}
 	},
 
+	/** Остановить текущий прогон parser:sync (SIGTERM процессу внутри юнита). Таймер не трогаем. */
+	parserStopService: async ({ cookies }) => {
+		if (!ensureAuth(cookies)) return fail(401, { error: 'Требуется авторизация.' });
+		try {
+			await execAsync('systemctl stop teleposter-parser.service', { maxBuffer: 256 * 1024 });
+			return {
+				success: true,
+				message: 'Прогон парсера остановлен (если он выполнялся). Таймер по расписанию не отключён.'
+			};
+		} catch (e: unknown) {
+			const err = e as { stderr?: string };
+			return fail(500, { error: err.stderr?.trim() || 'Не удалось остановить парсер.' });
+		}
+	},
+
+	/** Остановить юнит и сразу запустить новый прогон (удобно после зависания или для полного перезапуска). */
+	parserRestartService: async ({ cookies }) => {
+		if (!ensureAuth(cookies)) return fail(401, { error: 'Требуется авторизация.' });
+		try {
+			await execAsync('systemctl restart teleposter-parser.service', { maxBuffer: 256 * 1024 });
+			return {
+				success: true,
+				message: 'Парсер перезапущен: текущий прогон остановлен и запущен новый.'
+			};
+		} catch (e: unknown) {
+			const err = e as { stderr?: string };
+			return fail(500, { error: err.stderr?.trim() || 'Не удалось перезапустить парсер.' });
+		}
+	},
+
 	parserStartTimer: async ({ cookies }) => {
 		if (!ensureAuth(cookies)) return fail(401, { error: 'Требуется авторизация.' });
 		try {
-			await execAsync('systemctl start tradehub-parser.timer');
+			await execAsync('systemctl start teleposter-parser.timer');
 			return { success: true, message: 'Таймер парсера запущен.' };
 		} catch {
 			return fail(500, { error: 'Не удалось запустить таймер.' });
@@ -357,7 +391,7 @@ export const actions: Actions = {
 	parserStopTimer: async ({ cookies }) => {
 		if (!ensureAuth(cookies)) return fail(401, { error: 'Требуется авторизация.' });
 		try {
-			await execAsync('systemctl stop tradehub-parser.timer');
+			await execAsync('systemctl stop teleposter-parser.timer');
 			return { success: true, message: 'Таймер парсера остановлен.' };
 		} catch {
 			return fail(500, { error: 'Не удалось остановить таймер.' });
@@ -367,7 +401,7 @@ export const actions: Actions = {
 	parserEnableTimer: async ({ cookies }) => {
 		if (!ensureAuth(cookies)) return fail(401, { error: 'Требуется авторизация.' });
 		try {
-			await execAsync('systemctl enable tradehub-parser.timer');
+			await execAsync('systemctl enable teleposter-parser.timer');
 			return { success: true, message: 'Автозапуск таймера включен.' };
 		} catch {
 			return fail(500, { error: 'Не удалось включить автозапуск.' });
@@ -377,11 +411,43 @@ export const actions: Actions = {
 	parserDisableTimer: async ({ cookies }) => {
 		if (!ensureAuth(cookies)) return fail(401, { error: 'Требуется авторизация.' });
 		try {
-			await execAsync('systemctl disable tradehub-parser.timer');
+			await execAsync('systemctl disable teleposter-parser.timer');
 			return { success: true, message: 'Автозапуск таймера отключен.' };
 		} catch {
 			return fail(500, { error: 'Не удалось отключить автозапуск.' });
 		}
+	},
+
+	parserResetFailed: async ({ cookies }) => {
+		if (!ensureAuth(cookies)) return fail(401, { error: 'Требуется авторизация.' });
+		try {
+			await execAsync('systemctl reset-failed teleposter-parser.service teleposter-parser.timer');
+			return { success: true, message: 'Состояние failed сброшено для юнитов парсера.' };
+		} catch {
+			return fail(500, { error: 'Не удалось выполнить reset-failed.' });
+		}
+	},
+
+	setGroupActive: async ({ request, cookies }) => {
+		if (!ensureAuth(cookies)) return fail(401, { error: 'Требуется авторизация.' });
+		const formData = await request.formData();
+		const groupId = Number(formData.get('groupId'));
+		const raw = String(formData.get('isActive') ?? '');
+		if (!Number.isInteger(groupId) || groupId <= 0) {
+			return fail(400, { error: 'Некорректный ID группы.' });
+		}
+		const isActive = raw === '1' || raw === 'true';
+		const group = await db.query.telegramGroups.findFirst({
+			where: eq(telegramGroups.id, groupId)
+		});
+		if (!group) return fail(404, { error: 'Группа не найдена.' });
+		await db.update(telegramGroups).set({ isActive }).where(eq(telegramGroups.id, groupId));
+		return {
+			success: true,
+			message: isActive
+				? `Группа @${group.username ?? group.id} снова участвует в синхронизации.`
+				: `Группа @${group.username ?? group.id} отключена от парсинга.`
+		};
 	},
 
 	reportDismiss: async ({ request, cookies }) => {

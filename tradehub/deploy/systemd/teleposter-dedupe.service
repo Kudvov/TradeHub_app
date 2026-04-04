@@ -1,0 +1,19 @@
+[Unit]
+Description=teleposter — периодическая дедупликация объявлений в БД (cleanup-duplicates)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+EnvironmentFile=-/opt/teleposter/.env
+WorkingDirectory=/opt/teleposter
+# APPLY=1 — реально помечать дубли status=filtered; flock — не накладываться на другие задачи
+ExecStart=/bin/bash -lc 'exec 202>/run/teleposter-dedupe.lock; flock -n 202 || exit 0; exec env APPLY=1 npm run parser:cleanup-duplicates'
+User=root
+Group=root
+StandardOutput=journal
+StandardError=journal
+TimeoutStartSec=7200
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,124 @@
+@import '../styles/premium-gradient-border.css';
+
+/* Обычные карточки: обёртка не участвует в гриде */
+.listing-card-slot {
+	display: contents;
+}
+
+.listing-card {
+	display: flex;
+	flex-direction: column;
+	text-decoration: none;
+	color: inherit;
+	height: 100%;
+}
+
+.card-image {
+	position: relative;
+	aspect-ratio: 4 / 3;
+	overflow: hidden;
+	background: var(--bg-secondary);
+}
+
+.card-image img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+
+.card-category {
+	position: absolute;
+	top: 0.5rem;
+	left: 0.5rem;
+	padding: 0.2rem 0.45rem;
+	font-size: 0.6875rem;
+	font-weight: 500;
+	color: var(--text-secondary);
+	background: var(--card-badge-bg);
+	border: 1px solid var(--card-badge-border);
+	border-radius: var(--radius-sm);
+}
+
+.card-body {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+	padding: 1rem;
+	flex: 1;
+	min-width: 0;
+}
+
+.card-title {
+	font-size: 0.9375rem;
+	font-weight: 500;
+	line-height: 1.3;
+	color: var(--text-primary);
+	display: -webkit-box;
+	-webkit-line-clamp: 2;
+	-webkit-box-orient: vertical;
+	overflow: hidden;
+	overflow-wrap: anywhere;
+	word-break: break-word;
+}
+
+.card-description {
+	font-size: 0.8125rem;
+	color: var(--text-secondary);
+	line-height: 1.5;
+	display: -webkit-box;
+	-webkit-line-clamp: 2;
+	-webkit-box-orient: vertical;
+	overflow: hidden;
+	overflow-wrap: anywhere;
+	word-break: break-word;
+}
+
+.card-footer {
+	display: flex;
+	align-items: flex-end;
+	justify-content: space-between;
+	gap: 0.5rem;
+	margin-top: auto;
+	padding-top: 0.75rem;
+	border-top: 1px solid var(--border);
+}
+
+.card-price {
+	font-size: 1rem;
+	font-weight: 600;
+	color: var(--text-primary);
+	white-space: nowrap;
+}
+
+.card-meta {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-end;
+	gap: 0.125rem;
+	font-size: 0.75rem;
+	color: var(--text-muted);
+}
+
+.card-city {
+	color: var(--text-secondary);
+}
+
+.card-lang-badge {
+	position: absolute;
+	top: 0.5rem;
+	right: 0.5rem;
+	padding: 0.15rem 0.4rem;
+	font-size: 0.625rem;
+	font-weight: 700;
+	letter-spacing: 0.05em;
+	color: var(--text-secondary);
+	background: var(--card-badge-bg);
+	border: 1px solid var(--card-badge-border);
+	border-radius: var(--radius-sm);
+	opacity: 0.75;
+}
+
+.card-lang-badge--untranslated {
+	color: var(--text-muted);
+	opacity: 0.5;
+}

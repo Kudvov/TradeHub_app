@@ -1,5 +1,6 @@
 import { db } from '../db';
 import { cities, listings } from '../db/schema';
+import { listingHasPhotosSql } from '../db/listing-photo-filter';
 import { and, asc, eq, gt, sql } from 'drizzle-orm';
 import { extractData } from './extractor';
 import { hasStopWords } from './stop-words';
@@ -15,13 +16,12 @@ function buildListingText(title: string, description: string | null): string {
 }
 
 async function updateListingsCounts() {
-	const since90d = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
 	const allCities = await db.query.cities.findMany();
 	for (const city of allCities) {
 		const result = await db
 			.select({ count: sql<number>`count(*)::int` })
 			.from(listings)
-			.where(and(eq(listings.cityId, city.id), eq(listings.status, 'active'), gt(listings.publishedAt, since90d)));
+			.where(and(eq(listings.cityId, city.id), eq(listings.status, 'active'), listingHasPhotosSql));
 		const count = result[0]?.count ?? 0;
 		await db.update(cities).set({ listingsCount: count }).where(eq(cities.id, city.id));
 	}
@@ -68,10 +68,12 @@ async function main() {
 			const shouldRecategorize = listing.categoryId !== nextCategoryId;
 
 			if (shouldActivate || shouldRecategorize) {
+				const imgs = Array.isArray(listing.images) ? listing.images : [];
+				const hasPhoto = imgs.some((u) => typeof u === 'string' && u.length > 0);
 				await db
 					.update(listings)
 					.set({
-						status: 'active',
+						status: hasPhoto ? 'active' : 'filtered',
 						categoryId: nextCategoryId
 					})
 					.where(eq(listings.id, listing.id));
@@ -83,6 +85,16 @@ async function main() {
 			}
 		}
 	}
+
+	await db
+		.update(listings)
+		.set({ status: 'filtered' })
+		.where(
+			and(
+				eq(listings.status, 'active'),
+				sql`(coalesce(jsonb_array_length(coalesce(${listings.images}, '[]'::jsonb)), 0) = 0)`
+			)
+		);
 
 	await updateListingsCounts();
 

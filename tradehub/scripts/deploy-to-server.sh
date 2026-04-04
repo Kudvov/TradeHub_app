@@ -8,14 +8,14 @@
 #   DEPLOY_SSH_KEY_CONTENT  текст ключа (для CI/Cursor Secrets; создаётся временный файл)
 #
 # Пример:
-#   DEPLOY_HOST=root@155.212.134.183 DEPLOY_SSH_KEY=~/.ssh/tradehub_deploy ./scripts/deploy-to-server.sh
+#   DEPLOY_HOST=root@155.212.134.183 DEPLOY_SSH_KEY=~/.ssh/teleposter_deploy ./scripts/deploy-to-server.sh
 #
 # Опционально: рядом положить scripts/deploy.env (не коммитится) и:
 #   set -a && source "$(dirname "$0")/deploy.env" && set +a && ./scripts/deploy-to-server.sh
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
-ARCHIVE="/tmp/tradehub-deploy.tar.gz"
+ARCHIVE="/tmp/teleposter-deploy.tar.gz"
 REMOTE_HOST="${DEPLOY_HOST:-root@155.212.134.183}"
 SSH_PORT="${DEPLOY_SSH_PORT:-22}"
 
@@ -27,7 +27,7 @@ cleanup_key() {
 trap cleanup_key EXIT
 
 if [ -n "${DEPLOY_SSH_KEY_CONTENT:-}" ]; then
-	TMPKEY="$(mktemp "${TMPDIR:-/tmp}/tradehub_ssh.XXXXXX")"
+	TMPKEY="$(mktemp "${TMPDIR:-/tmp}/teleposter_ssh.XXXXXX")"
 	chmod 600 "$TMPKEY"
 	printf '%b' "$DEPLOY_SSH_KEY_CONTENT" >"$TMPKEY"
 	SSH_KEY_FILE="$TMPKEY"
@@ -58,9 +58,9 @@ fi
 
 REMOTE_USER="${REMOTE_HOST%%@*}"
 if [ "$REMOTE_USER" = "root" ]; then
-	REMOTE_SHELL='cp /tmp/tradehub-deploy.tar.gz /root/tradehub-deploy.tar.gz && bash -s'
+	REMOTE_SHELL='cp /tmp/teleposter-deploy.tar.gz /root/teleposter-deploy.tar.gz && bash -s'
 else
-	REMOTE_SHELL='sudo cp /tmp/tradehub-deploy.tar.gz /root/tradehub-deploy.tar.gz && sudo bash -s'
+	REMOTE_SHELL='sudo cp /tmp/teleposter-deploy.tar.gz /root/teleposter-deploy.tar.gz && sudo bash -s'
 fi
 
 echo "→ Сборка архива из $ROOT ..."
@@ -71,7 +71,7 @@ tar --exclude='tradehub/node_modules' \
 	-C "$ROOT" tradehub
 
 echo "→ Копирование на $REMOTE_HOST (порт $SSH_PORT) ..."
-"${SCP_BASE[@]}" "$ARCHIVE" "$REMOTE_HOST:/tmp/tradehub-deploy.tar.gz"
+"${SCP_BASE[@]}" "$ARCHIVE" "$REMOTE_HOST:/tmp/teleposter-deploy.tar.gz"
 
 echo "→ Запуск remote-deploy на сервере ..."
 "${SSH_BASE[@]}" "$REMOTE_HOST" "$REMOTE_SHELL" <"$ROOT/tradehub/scripts/remote-deploy.sh"

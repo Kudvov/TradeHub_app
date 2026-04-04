@@ -1,5 +1,5 @@
 -- Курсор/старт как в админке (скрин). Выполнить на сервере:
---   cd /opt/tradehub && export $(grep -v '^#' .env | xargs) && psql "$DATABASE_URL" -f scripts/update-telegram-cursors.sql
+--   cd /opt/teleposter && export $(grep -v '^#' .env | xargs) && psql "$DATABASE_URL" -f scripts/update-telegram-cursors.sql
 
 UPDATE telegram_groups SET last_message_id = 472283, start_message_id = 472283 WHERE username = 'baraholka_tbilisi';
 UPDATE telegram_groups SET last_message_id = 10285, start_message_id = 10285 WHERE username = 'baraholka_tbilis';
@@ -11,7 +11,7 @@ UPDATE telegram_groups SET last_message_id = 103, start_message_id = 103 WHERE u
 UPDATE telegram_groups SET last_message_id = 1, start_message_id = 0 WHERE username = 'baraholka_batumi_home';
 UPDATE telegram_groups SET last_message_id = 1, start_message_id = 0 WHERE username = 'baraholka_ge';
 UPDATE telegram_groups SET last_message_id = 19496, start_message_id = 19496 WHERE username = 'baraholka_avito_batumi';
-UPDATE telegram_groups SET last_message_id = 2299485, start_message_id = 2299485 WHERE username = 'Batumi_helps';
+UPDATE telegram_groups SET last_message_id = 2301897, start_message_id = 2301897 WHERE username = 'Batumi_helps';
 UPDATE telegram_groups SET last_message_id = 7777, start_message_id = 7777 WHERE username = 'BatumiTradeHub';
 UPDATE telegram_groups SET last_message_id = 32, start_message_id = 32 WHERE username = 'tbilisi_baraholka';
 UPDATE telegram_groups SET last_message_id = 100, start_message_id = 100 WHERE username = 'tbilisi_buy_sell';

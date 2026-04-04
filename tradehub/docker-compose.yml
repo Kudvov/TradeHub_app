@@ -1,15 +1,15 @@
 services:
   db:
     image: postgres:16-alpine
-    container_name: tradehub-postgres
+    container_name: teleposter-postgres
     ports:
       - '5432:5432'
     environment:
-      POSTGRES_USER: tradehub
-      POSTGRES_PASSWORD: tradehub
-      POSTGRES_DB: tradehub
+      POSTGRES_USER: teleposter
+      POSTGRES_PASSWORD: teleposter
+      POSTGRES_DB: teleposter
     volumes:
-      - tradehub_pgdata:/var/lib/postgresql/data
+      - teleposter_pgdata:/var/lib/postgresql/data
 
 volumes:
-  tradehub_pgdata:
+  teleposter_pgdata:

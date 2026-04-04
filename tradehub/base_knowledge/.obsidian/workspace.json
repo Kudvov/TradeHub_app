@@ -1,0 +1,215 @@
+{
+  "main": {
+    "id": "7bfeaf61f2fcda94",
+    "type": "split",
+    "children": [
+      {
+        "id": "a8424f90c1476755",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "d6b367a2d2ffcf0a",
+            "type": "leaf",
+            "state": {
+              "type": "empty",
+              "state": {},
+              "icon": "lucide-file",
+              "title": "New tab"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "c3c1214616053630",
+    "type": "split",
+    "children": [
+      {
+        "id": "ce14dda38d69b10c",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "96f5467170f57432",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical",
+                "autoReveal": false
+              },
+              "icon": "lucide-folder-closed",
+              "title": "Files"
+            }
+          },
+          {
+            "id": "d1729726721095c7",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "Search"
+            }
+          },
+          {
+            "id": "f026aad4634ebcfa",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {},
+              "icon": "lucide-bookmark",
+              "title": "Bookmarks"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "right": {
+    "id": "a65544b631348d9f",
+    "type": "split",
+    "children": [
+      {
+        "id": "2a54bdbbf6777eed",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "4579b3534b64daec",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "file": "gsd_guide_claudecode/SOURCE-GSD_Guide_ClaudeCode.md",
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "Backlinks for SOURCE-GSD_Guide_ClaudeCode"
+            }
+          },
+          {
+            "id": "5fa77fe794f5b2ff",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "file": "gsd_guide_claudecode/SOURCE-GSD_Guide_ClaudeCode.md",
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "Outgoing links from SOURCE-GSD_Guide_ClaudeCode"
+            }
+          },
+          {
+            "id": "29b0737bfa9cbeaf",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "Tags"
+            }
+          },
+          {
+            "id": "6acd0b5f0bac8f9b",
+            "type": "leaf",
+            "state": {
+              "type": "all-properties",
+              "state": {
+                "sortOrder": "frequency",
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-archive",
+              "title": "All properties"
+            }
+          },
+          {
+            "id": "8ba567c0290c17f8",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "file": "gsd_guide_claudecode/SOURCE-GSD_Guide_ClaudeCode.md",
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-list",
+              "title": "Outline of SOURCE-GSD_Guide_ClaudeCode"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:Open quick switcher": false,
+      "graph:Open graph view": false,
+      "canvas:Create new canvas": false,
+      "daily-notes:Open today's daily note": false,
+      "templates:Insert template": false,
+      "command-palette:Open command palette": false,
+      "bases:Create new base": false
+    }
+  },
+  "active": "d6b367a2d2ffcf0a",
+  "lastOpenFiles": [
+    "spec_first_methodology/04-Слой-2-Техническая-спецификация.md",
+    "spec_first_methodology/03-Слой-1-Документ-идеи.md",
+    "spec_first_methodology/02-Пайплайн-5-слоев.md",
+    "spec_first_methodology/01-Философия-Spec-First.md",
+    "gsd_guide_claudecode/03-Установка-GSD.md",
+    "gsd_guide_claudecode/02-Перед-установкой.md",
+    "gsd_guide_claudecode/01-Что-такое-GSD.md",
+    "gsd_guide_claudecode/SOURCE-GSD_Guide_ClaudeCode.md",
+    "gsd_guide_claudecode/09-FAQ-и-ссылки.md",
+    "gsd_guide_claudecode/08-Автоматизация-и-удаление.md",
+    "gsd_guide_claudecode/README.md",
+    "gsd_guide_claudecode/04-Новый-проект-с-нуля.md",
+    "gsd_guide_claudecode/05-Существующий-проект.md",
+    "gsd_guide_claudecode/06-Команды-GSD.md",
+    "obsidian_claudecode_guide/SOURCE-Obsidian_ClaudeCode_Guide.md",
+    "obsidian_claudecode_guide/09-Связка-с-GSD.md",
+    "obsidian_claudecode_guide/08-FAQ.md",
+    "obsidian_claudecode_guide/07-Структура-vault.md",
+    "obsidian_claudecode_guide/06-Реальные-юзкейсы.md",
+    "obsidian_claudecode_guide/05-Именование-заметок.md",
+    "obsidian_claudecode_guide/03-Путь-1-Действующий-проект.md",
+    "obsidian_claudecode_guide/README.md",
+    "obsidian_claudecode_guide/02-Архитектура-3-слоя-памяти.md",
+    "obsidian_claudecode_guide/04-Путь-2-Новый-проект.md",
+    "obsidian_claudecode_guide/01-Зачем-это-нужно.md",
+    "obsidian_claudecode_guide/assets",
+    "obsidian_claudecode_guide",
+    "gsd_guide_claudecode/07-Структура-проекта-с-GSD.md",
+    "gsd_guide_claudecode/assets",
+    "gsd_guide_claudecode"
+  ]
+}

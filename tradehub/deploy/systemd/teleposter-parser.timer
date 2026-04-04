@@ -1,0 +1,13 @@
+[Unit]
+Description=Периодический запуск парсера teleposter (Telegram)
+
+[Timer]
+# Первый запуск через 2 минуты после загрузки, далее каждую минуту после завершения предыдущего прогона
+OnBootSec=2min
+OnUnitActiveSec=1min
+AccuracySec=1s
+Persistent=true
+Unit=teleposter-parser.service
+
+[Install]
+WantedBy=timers.target

@@ -1,20 +1,32 @@
+import { parseListingPeriod } from '$lib/listing-period';
 import { json } from '@sveltejs/kit';
 import { db } from '$lib/server/db';
 import { listings, cities, categories } from '$lib/server/db/schema';
-import { eq, and, ilike, sql, desc, count, gte } from 'drizzle-orm';
+import { listingHasPhotosSql } from '$lib/server/db/listing-photo-filter';
+import { listingPublishedInPeriodSql } from '$lib/server/listing-period-sql';
+import { checkRateLimit, getClientIp } from '$lib/server/rate-limit';
+import { eq, and, sql, desc, count } from 'drizzle-orm';
 import type { RequestHandler } from './$types';
 
-export const GET: RequestHandler = async ({ url }) => {
+export const GET: RequestHandler = async ({ url, request }) => {
+	const ip = getClientIp(request);
+	if (!checkRateLimit(ip, { limit: 120, windowMs: 60_000 })) {
+		return json({ error: 'Too many requests' }, { status: 429 });
+	}
+
 	const citySlug = url.searchParams.get('city');
 	const categorySlug = url.searchParams.get('category');
 	const query = url.searchParams.get('q');
+	const periodSlug = parseListingPeriod(url.searchParams.get('period'));
 	const page = Math.max(1, parseInt(url.searchParams.get('page') ?? '1'));
 	const limit = Math.min(50, Math.max(1, parseInt(url.searchParams.get('limit') ?? '20')));
 	const offset = (page - 1) * limit;
 
-	const since90d = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
-	// Build conditions
-	const conditions = [eq(listings.status, 'active'), gte(listings.publishedAt, since90d)];
+	const conditions = [eq(listings.status, 'active'), listingHasPhotosSql];
+
+	if (periodSlug) {
+		conditions.push(listingPublishedInPeriodSql(periodSlug));
+	}
 
 	if (citySlug) {
 		const city = await db.select().from(cities).where(eq(cities.slug, citySlug)).limit(1);
@@ -23,6 +35,7 @@ export const GET: RequestHandler = async ({ url }) => {
 		}
 	}
 
+	let filteredByCategory = false;
 	if (categorySlug) {
 		const category = await db
 			.select()
@@ -31,16 +44,25 @@ export const GET: RequestHandler = async ({ url }) => {
 			.limit(1);
 		if (category.length > 0) {
 			conditions.push(eq(listings.categoryId, category[0].id));
+			filteredByCategory = true;
 		}
 	}
 
 	if (query) {
-		conditions.push(
-			sql`(${ilike(listings.title, `%${query}%`)} OR ${ilike(listings.description, `%${query}%`)})`
-		);
+		conditions.push(sql`(
+			to_tsvector('russian', coalesce(${listings.title}, '') || ' ' || coalesce(${listings.description}, ''))
+			@@ websearch_to_tsquery('russian', ${query})
+			OR
+			to_tsvector('simple', coalesce(${listings.title}, '') || ' ' || coalesce(${listings.description}, ''))
+			@@ websearch_to_tsquery('simple', ${query})
+		)`);
 	}
 
 	const where = conditions.length > 1 ? and(...conditions) : conditions[0];
+
+	const orderBy = filteredByCategory
+		? [desc(listings.publishedAt), desc(listings.id)]
+		: [desc(listings.createdAt), desc(listings.id)];
 
 	// Get total count
 	const [{ total }] = await db
@@ -55,7 +77,7 @@ export const GET: RequestHandler = async ({ url }) => {
 			city: true,
 			category: true
 		},
-		orderBy: [desc(listings.publishedAt)],
+		orderBy,
 		limit,
 		offset
 	});

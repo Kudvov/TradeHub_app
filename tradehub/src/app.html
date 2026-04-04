@@ -3,17 +3,24 @@
 	<head>
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
-		<meta name="description" content="TradeHub — доска объявлений из Telegram-барахолок. Найди лучшие предложения в своём городе." />
-		<meta name="theme-color" content="#0a0a0f" />
+		<meta name="description" content="teleposter — доска объявлений из Telegram-барахолок. Найди лучшие предложения в своём городе." />
+		<meta name="theme-color" content="#fbfaf8" media="(prefers-color-scheme: light)" />
+		<meta name="theme-color" content="#0e0708" media="(prefers-color-scheme: dark)" />
 		<link rel="preconnect" href="https://fonts.googleapis.com" />
 		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
 		%sveltekit.head%
 		<script>
-			try {
-				if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-					document.documentElement.classList.add('dark');
-				}
-			} catch (_) {}
+			(function () {
+				try {
+					var mq = window.matchMedia('(prefers-color-scheme: dark)');
+					function syncTheme() {
+						document.documentElement.classList.toggle('dark', mq.matches);
+					}
+					syncTheme();
+					if (mq.addEventListener) mq.addEventListener('change', syncTheme);
+					else mq.addListener(syncTheme);
+				} catch (_) {}
+			})();
 		</script>
 	</head>
 	<body data-sveltekit-preload-data="hover">

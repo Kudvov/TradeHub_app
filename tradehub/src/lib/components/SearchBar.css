@@ -1,0 +1,153 @@
+.search-bar {
+	display: flex;
+	align-items: stretch;
+	gap: 0;
+	width: 100%;
+	max-width: none;
+	min-height: 0;
+	/* glass, чуть заметнее */
+	background: color-mix(in srgb, var(--gray-0) 55%, transparent);
+	backdrop-filter: blur(16px) saturate(1.25);
+	-webkit-backdrop-filter: blur(16px) saturate(1.25);
+	border: 1px solid color-mix(in srgb, var(--gray-900) 8%, transparent);
+	/* только внутренняя слабая тень, без внешнего свечения */
+	box-shadow: inset 0 1px 2px color-mix(in srgb, var(--gray-900) 5%, transparent);
+	border-radius: 12px;
+	padding: 0.15rem 0.15rem 0.15rem 1.125rem;
+	transition:
+		border-color var(--transition-fast),
+		box-shadow var(--transition-fast);
+}
+
+html.dark .search-bar {
+	background: color-mix(in srgb, var(--gray-800) 72%, transparent);
+	border-color: color-mix(in srgb, var(--gray-0) 12%, transparent);
+	box-shadow: inset 0 1px 3px color-mix(in srgb, var(--gray-950) 45%, transparent);
+}
+
+.search-bar:focus-within {
+	border-color: color-mix(in srgb, var(--gray-900) 18%, transparent);
+	box-shadow: inset 0 1px 3px color-mix(in srgb, var(--gray-900) 7%, transparent);
+}
+
+html.dark .search-bar:focus-within {
+	border-color: color-mix(in srgb, var(--gray-0) 22%, transparent);
+	box-shadow: inset 0 1px 4px color-mix(in srgb, var(--gray-950) 55%, transparent);
+}
+
+.search-icon {
+	align-self: center;
+	color: var(--text-muted);
+	flex-shrink: 0;
+	display: flex;
+}
+
+.search-input {
+	flex: 1;
+	align-self: stretch;
+	min-height: 2.5rem;
+	border: none;
+	background: transparent;
+	color: var(--text-primary);
+	font-family: var(--font-sans);
+	font-size: 0.9375rem;
+	line-height: 1.4;
+	padding: 0.4rem 0.875rem;
+	outline: none;
+	min-width: 0;
+	box-sizing: border-box;
+	-webkit-tap-highlight-color: transparent;
+	caret-color: var(--text-primary);
+}
+
+/* Сильнее глобального :focus-visible в app.css (там outline через --accent ≈ тёмно-серый) */
+.search-bar .search-input:focus,
+.search-bar .search-input:focus-visible {
+	outline: none;
+	box-shadow: none;
+}
+
+/* убрать «синее» выделение текста (selection) */
+.search-input::selection {
+	background: color-mix(in srgb, var(--gray-900) 10%, transparent);
+	color: inherit;
+}
+
+html.dark .search-input::selection {
+	background: color-mix(in srgb, var(--gray-0) 14%, transparent);
+}
+
+.search-input::placeholder {
+	color: var(--text-muted);
+}
+
+/* Chrome autofill — без голубого фона (перекрытие inset-тенью под стекло) */
+.search-input:-webkit-autofill,
+.search-input:-webkit-autofill:hover,
+.search-input:-webkit-autofill:focus {
+	-webkit-text-fill-color: var(--text-primary);
+	caret-color: var(--text-primary);
+	transition: background-color 99999s ease-out;
+	box-shadow: 0 0 0 1000px color-mix(in srgb, var(--gray-0) 35%, transparent) inset !important;
+}
+
+html.dark .search-input:-webkit-autofill,
+html.dark .search-input:-webkit-autofill:hover,
+html.dark .search-input:-webkit-autofill:focus {
+	box-shadow: 0 0 0 1000px color-mix(in srgb, var(--gray-900) 65%, transparent) inset !important;
+}
+
+.search-clear {
+	align-self: center;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 2.5rem;
+	height: 2.5rem;
+	border: none;
+	background: transparent;
+	color: var(--text-muted);
+	cursor: pointer;
+	border-radius: var(--radius-sm);
+	transition: all var(--transition-fast);
+	flex-shrink: 0;
+}
+
+.search-clear:hover {
+	background: color-mix(in srgb, var(--gray-900) 6%, transparent);
+	color: var(--text-primary);
+}
+
+html.dark .search-clear:hover {
+	background: color-mix(in srgb, var(--gray-0) 8%, transparent);
+}
+
+.search-submit {
+	flex-shrink: 0;
+	align-self: stretch;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	margin: 0;
+	border-radius: 10px;
+	min-height: 0;
+	padding-left: 1.1rem;
+	padding-right: 1.1rem;
+	font-size: 0.9375rem;
+	font-weight: 600;
+	box-sizing: border-box;
+}
+
+@media (max-width: 480px) {
+	.search-input {
+		font-size: 0.875rem;
+		padding-left: 0.75rem;
+		padding-right: 0.75rem;
+	}
+
+	.search-submit {
+		padding-left: 0.75rem;
+		padding-right: 0.75rem;
+		font-size: 0.875rem;
+	}
+}

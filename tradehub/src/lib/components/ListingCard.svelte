@@ -1,137 +1,99 @@
 <script lang="ts">
+	import './ListingCard.css';
 	import { formatPrice, formatDate, maskLinks, truncate } from '$lib/utils/format';
-	import type { Listing, Category, City } from '$lib/types';
+	import { isPremiumListing } from '$lib/premium-group';
+	import { _, locale } from 'svelte-i18n';
+	import type { Listing, Category, City, TelegramGroup } from '$lib/types';
 
-	type ListingData = Listing & { city?: City | null; category?: Category | null };
+	type ListingData = Listing & {
+		city?: City | null;
+		category?: Category | null;
+		telegramGroup?: TelegramGroup | null;
+	};
 	let { listing }: { listing: ListingData } = $props();
+
+	const premium = $derived(isPremiumListing(listing));
 
 	const imageUrl = $derived(listing.images && listing.images.length > 0
 		? listing.images[0]
 		: 'https://placehold.co/400x300/1a1a2e/6a6a7a?text=No+Photo');
-	const safeTitle = $derived(maskLinks(listing.title));
-	const safeDescription = $derived(listing.description ? maskLinks(listing.description) : '');
+
+	// Показываем переведённый заголовок если доступен
+	const displayTitle = $derived.by(() => {
+		const loc = $locale ?? 'ru';
+		if (loc === 'en' && listing.titleEn) return listing.titleEn;
+		if (loc === 'ka' && listing.titleKa) return listing.titleKa;
+		return listing.title;
+	});
+
+	const displayDescription = $derived.by(() => {
+		const loc = $locale ?? 'ru';
+		if (loc === 'en' && listing.descriptionEn) return listing.descriptionEn;
+		if (loc === 'ka' && listing.descriptionKa) return listing.descriptionKa;
+		return listing.description ?? '';
+	});
+
+	const safeTitle = $derived(maskLinks(displayTitle));
+	const safeDescription = $derived(displayDescription ? maskLinks(displayDescription) : '');
+
+	// Название категории через i18n (slug → ключ)
+	const categoryName = $derived.by(() => {
+		const slug = listing.category?.slug;
+		if (!slug) return listing.category?.name ?? '';
+		const key = `cat_${slug}` as const;
+		return $_(key) || listing.category?.name || '';
+	});
+
+	// Название города через i18n
+	const cityName = $derived.by(() => {
+		const slug = listing.city?.slug;
+		if (!slug) return listing.city?.name ?? '';
+		return $_((`city_${slug}`)) || listing.city?.name || '';
+	});
+
+	// Бейдж языка оригинала: показываем если смотрим не на русском
+	const showLangBadge = $derived(($locale ?? 'ru') !== 'ru');
+	// Если перевод ещё не готов — показываем оригинал с пометкой RU
+	const isTranslated = $derived.by(() => {
+		const loc = $locale ?? 'ru';
+		if (loc === 'en') return !!listing.titleEn;
+		if (loc === 'ka') return !!listing.titleKa;
+		return true;
+	});
 </script>
 
-<a href="/listing/{listing.id}" class="listing-card card" id="listing-{listing.id}">
-	<div class="card-image">
-		<img src={imageUrl} alt={listing.title} loading="lazy" />
-		{#if listing.category}
-			<span class="card-category">{listing.category.name}</span>
-		{/if}
-	</div>
-	<div class="card-body">
-		<h3 class="card-title">{truncate(safeTitle, 60)}</h3>
-		{#if listing.description}
-			<p class="card-description">{truncate(safeDescription, 90)}</p>
-		{/if}
-		<div class="card-footer">
-			<span class="card-price">{formatPrice(listing.price, listing.currency)}</span>
-			<span class="card-meta">
-				{#if listing.city}
-					<span class="card-city">{listing.city.name}</span>
-				{/if}
-				<span class="card-time">{formatDate(listing.publishedAt)}</span>
-			</span>
+<div class={premium ? 'listing-card-premium-host' : 'listing-card-slot'}>
+	<a
+		href="/listing/{listing.id}"
+		class="listing-card card"
+		class:premium-gradient-border={premium}
+		id="listing-{listing.id}"
+	>
+		<div class="card-image">
+			<img src={imageUrl} alt={listing.title} loading="lazy" />
+			{#if listing.category}
+				<span class="card-category">{categoryName}</span>
+			{/if}
+			{#if showLangBadge}
+				<span class="card-lang-badge" class:card-lang-badge--untranslated={!isTranslated}>
+					RU
+				</span>
+			{/if}
 		</div>
-	</div>
-</a>
-
-<style>
-	.listing-card {
-		display: flex;
-		flex-direction: column;
-		text-decoration: none;
-		color: inherit;
-		height: 100%;
-	}
-
-	.card-image {
-		position: relative;
-		aspect-ratio: 4 / 3;
-		overflow: hidden;
-		background: var(--bg-secondary);
-	}
-
-	.card-image img {
-		width: 100%;
-		height: 100%;
-		object-fit: cover;
-	}
-
-	.card-category {
-		position: absolute;
-		top: 0.5rem;
-		left: 0.5rem;
-		padding: 0.2rem 0.45rem;
-		font-size: 0.6875rem;
-		font-weight: 500;
-		color: var(--text-secondary);
-		background: var(--card-badge-bg);
-		border: 1px solid var(--card-badge-border);
-		border-radius: var(--radius-sm);
-	}
-
-	.card-body {
-		display: flex;
-		flex-direction: column;
-		gap: 0.5rem;
-		padding: 1rem;
-		flex: 1;
-		min-width: 0;
-	}
-
-	.card-title {
-		font-size: 0.9375rem;
-		font-weight: 500;
-		line-height: 1.3;
-		color: var(--text-primary);
-		display: -webkit-box;
-		-webkit-line-clamp: 2;
-		-webkit-box-orient: vertical;
-		overflow: hidden;
-		overflow-wrap: anywhere;
-		word-break: break-word;
-	}
-
-	.card-description {
-		font-size: 0.8125rem;
-		color: var(--text-secondary);
-		line-height: 1.5;
-		display: -webkit-box;
-		-webkit-line-clamp: 2;
-		-webkit-box-orient: vertical;
-		overflow: hidden;
-		overflow-wrap: anywhere;
-		word-break: break-word;
-	}
-
-	.card-footer {
-		display: flex;
-		align-items: flex-end;
-		justify-content: space-between;
-		gap: 0.5rem;
-		margin-top: auto;
-		padding-top: 0.75rem;
-		border-top: 1px solid var(--border);
-	}
-
-	.card-price {
-		font-size: 1rem;
-		font-weight: 600;
-		color: var(--text-primary);
-		white-space: nowrap;
-	}
-
-	.card-meta {
-		display: flex;
-		flex-direction: column;
-		align-items: flex-end;
-		gap: 0.125rem;
-		font-size: 0.75rem;
-		color: var(--text-muted);
-	}
-
-	.card-city {
-		color: var(--text-secondary);
-	}
-</style>
+		<div class="card-body">
+			<h3 class="card-title">{truncate(safeTitle, 60)}</h3>
+			{#if displayDescription}
+				<p class="card-description">{truncate(safeDescription, 90)}</p>
+			{/if}
+			<div class="card-footer">
+				<span class="card-price">{formatPrice(listing.price, listing.currency, $locale ?? 'ru')}</span>
+				<span class="card-meta">
+					{#if listing.city}
+						<span class="card-city">{cityName}</span>
+					{/if}
+					<span class="card-time">{formatDate(listing.publishedAt, $locale ?? 'ru')}</span>
+				</span>
+			</div>
+		</div>
+	</a>
+</div>

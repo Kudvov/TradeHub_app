@@ -1,6 +1,9 @@
 <script lang="ts">
 	import '../app.css';
+	import './layout.css';
+	import { _ } from 'svelte-i18n';
 	import Header from '$lib/components/Header.svelte';
+	import SiteFooter from '$lib/components/SiteFooter.svelte';
 	import SearchBar from '$lib/components/SearchBar.svelte';
 	import { page } from '$app/stores';
 	import { afterNavigate, goto, onNavigate } from '$app/navigation';
@@ -35,16 +38,26 @@
 	const searchBarValue = $derived(activeCity ? ($page.url.searchParams.get('q') ?? '') : '');
 
 	const searchPlaceholder = $derived(
-		activeCity ? `Поиск в ${activeCity.name}...` : 'Что ищешь? iPhone, велосипед, диван...'
+		activeCity
+			? $_('search_placeholder_city', { values: { city: $_((`city_${activeCity.slug}`)) || activeCity.name } })
+			: $_('search_placeholder')
 	);
 
+	function citySlugForSearch(): string {
+		const p = data.preferredCitySlug;
+		if (p && data.cities.some((c) => c.slug === p)) return p;
+		return data.cities[0]?.slug ?? 'tbilisi';
+	}
+
 	function handleLayoutSearch(query: string) {
-		const slug = activeCity?.slug ?? data.cities[0]?.slug ?? 'tbilisi';
+		const slug = activeCity?.slug ?? citySlugForSearch();
 		const trimmed = query.trim();
 		const params = new URLSearchParams();
 		if (activeCity) {
 			const cat = $page.url.searchParams.get('category');
 			if (cat) params.set('category', cat);
+			const period = $page.url.searchParams.get('period');
+			if (period) params.set('period', period);
 		}
 		if (trimmed) params.set('q', trimmed);
 		const qs = params.toString();
@@ -53,7 +66,8 @@
 </script>
 
 <svelte:head>
-	<title>TradeHub — Объявления из Telegram</title>
+	<title>teleposter — Объявления из Telegram</title>
+	<link rel="icon" href="/logo.svg" type="image/svg+xml" />
 </svelte:head>
 
 <div
@@ -75,183 +89,5 @@
 		{@render children()}
 	</main>
 
-	{#if $page.url.pathname === '/'}
-		<footer class="footer-home">
-			<div class="container footer-home-inner">
-				<span class="footer-home-copy">© {new Date().getFullYear()} TradeHub</span>
-				<span class="footer-home-sep" aria-hidden="true">·</span>
-				{#each data.cities as city, i (city.id)}
-					<a href="/{city.slug}" class="footer-home-link">{city.name}</a>{#if i < data.cities.length - 1}<span class="footer-home-sep" aria-hidden="true">·</span>{/if}
-				{/each}
-			</div>
-		</footer>
-	{:else}
-		<footer class="footer">
-			<div class="container footer-inner">
-				<div class="footer-brand">
-					<span class="footer-logo">Trade<span class="footer-logo-muted">Hub</span></span>
-					<p class="text-sm text-muted">Объявления из Telegram-барахолок</p>
-				</div>
-				<div class="footer-links">
-					{#each data.cities as city (city.id)}
-						<a href="/{city.slug}" class="footer-link">{city.name}</a>
-					{/each}
-				</div>
-				<p class="footer-copy text-xs text-muted">© {new Date().getFullYear()} TradeHub. Данные из открытых Telegram-групп.</p>
-			</div>
-		</footer>
-	{/if}
+	<SiteFooter cities={data.cities} />
 </div>
-
-<style>
-	.app-root {
-		min-height: 100dvh;
-		display: flex;
-		flex-direction: column;
-	}
-
-	.app-root--home {
-		height: 100dvh;
-		max-height: 100dvh;
-		overflow: hidden;
-	}
-
-	/* исчезновение первого экрана перед переходом к поиску */
-	.app-root--home.app-root--home-exit :global(header.header),
-	.app-root--home.app-root--home-exit .main-content--home,
-	.app-root--home.app-root--home-exit .footer-home {
-		transition:
-			opacity 0.42s cubic-bezier(0.4, 0, 0.2, 1),
-			transform 0.48s cubic-bezier(0.33, 1, 0.32, 1),
-			filter 0.42s ease;
-	}
-
-	.app-root--home.app-root--home-exit :global(header.header),
-	.app-root--home.app-root--home-exit .main-content--home,
-	.app-root--home.app-root--home-exit .footer-home {
-		opacity: 0;
-		transform: translateY(-12px);
-		filter: blur(10px);
-	}
-
-	@media (prefers-reduced-motion: reduce) {
-		.app-root--home.app-root--home-exit :global(header.header),
-		.app-root--home.app-root--home-exit .main-content--home,
-		.app-root--home.app-root--home-exit .footer-home {
-			filter: none;
-			transform: none;
-			transition-duration: 0.01ms;
-		}
-	}
-
-	.layout-search-sticky {
-		position: sticky;
-		top: 64px;
-		z-index: 90;
-		padding: 0.75rem 0 1rem;
-		background: var(--bg-primary);
-	}
-
-	.layout-search-inner {
-		display: flex;
-		width: 100%;
-	}
-
-	.main-content {
-		position: relative;
-		z-index: 1;
-		min-height: calc(100dvh - 64px - 200px);
-	}
-
-	.main-content--home {
-		flex: 1;
-		min-height: 0;
-		display: flex;
-		flex-direction: column;
-		overflow: hidden;
-	}
-
-	.footer-home {
-		flex-shrink: 0;
-		padding: 0.35rem 0 calc(0.5rem + env(safe-area-inset-bottom, 0px));
-		background: var(--bg-primary);
-		border-top: none;
-	}
-
-	.footer-home-inner {
-		display: flex;
-		flex-wrap: wrap;
-		align-items: center;
-		justify-content: center;
-		gap: 0.35rem 0.5rem;
-		font-size: 0.75rem;
-		color: var(--text-muted);
-	}
-
-	.footer-home-copy {
-		white-space: nowrap;
-	}
-
-	.footer-home-sep {
-		opacity: 0.45;
-		user-select: none;
-	}
-
-	.footer-home-link {
-		color: var(--text-secondary);
-		white-space: nowrap;
-	}
-
-	.footer-home-link:hover {
-		color: var(--accent);
-	}
-
-	.footer {
-		position: relative;
-		z-index: 1;
-		margin-top: 3rem;
-		padding: 2rem 0;
-		border-top: 1px solid var(--border);
-		background: var(--bg-secondary);
-	}
-
-	.footer-inner {
-		display: flex;
-		flex-direction: column;
-		gap: 1.5rem;
-		align-items: center;
-		text-align: center;
-	}
-
-	.footer-logo {
-		font-size: 1rem;
-		font-weight: 600;
-		color: var(--text-primary);
-	}
-
-	.footer-logo-muted {
-		font-weight: 500;
-		color: var(--text-muted);
-	}
-
-	.footer-links {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 1rem;
-		justify-content: center;
-	}
-
-	.footer-link {
-		font-size: 0.875rem;
-		color: var(--text-secondary);
-		transition: color var(--transition-fast);
-	}
-
-	.footer-link:hover {
-		color: var(--accent);
-	}
-
-	.footer-copy {
-		padding-top: 0.5rem;
-	}
-</style>

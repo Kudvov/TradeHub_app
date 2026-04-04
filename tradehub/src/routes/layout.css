@@ -1,0 +1,75 @@
+.app-root {
+	min-height: 100dvh;
+	display: flex;
+	flex-direction: column;
+}
+
+.app-root--home {
+	min-height: 100dvh;
+	height: auto;
+	max-height: none;
+	overflow-x: hidden;
+	overflow-y: auto;
+}
+
+/* исчезновение первого экрана перед переходом к поиску */
+.app-root--home.app-root--home-exit header.header,
+.app-root--home.app-root--home-exit .main-content--home,
+.app-root--home.app-root--home-exit .footer-home {
+	transition:
+		opacity 0.42s cubic-bezier(0.4, 0, 0.2, 1),
+		transform 0.48s cubic-bezier(0.33, 1, 0.32, 1),
+		filter 0.42s ease;
+}
+
+.app-root--home.app-root--home-exit header.header,
+.app-root--home.app-root--home-exit .main-content--home,
+.app-root--home.app-root--home-exit .footer-home {
+	opacity: 0;
+	transform: translateY(-12px);
+	filter: blur(10px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.app-root--home.app-root--home-exit header.header,
+	.app-root--home.app-root--home-exit .main-content--home,
+	.app-root--home.app-root--home-exit .footer-home {
+		filter: none;
+		transform: none;
+		transition-duration: 0.01ms;
+	}
+}
+
+.layout-search-sticky {
+	position: sticky;
+	top: 64px;
+	z-index: 90;
+	padding: 0.35rem 0 0.45rem;
+	background: var(--bg-primary);
+}
+
+@media (max-width: 480px) {
+	.layout-search-sticky {
+		top: 96px;
+	}
+}
+
+.layout-search-inner {
+	display: flex;
+	width: 100%;
+}
+
+.main-content {
+	position: relative;
+	z-index: 1;
+	flex: 1;
+	min-height: calc(100dvh - 64px - 3.5rem);
+}
+
+.main-content--home {
+	flex: 1;
+	min-height: 0;
+	display: flex;
+	flex-direction: column;
+	overflow: visible;
+}

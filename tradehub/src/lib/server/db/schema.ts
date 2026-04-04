@@ -95,16 +95,27 @@ export const listings = pgTable(
 		contentHash: text('content_hash'),
 		images: jsonb('images').$type<string[]>().default([]),
 		status: text('status').notNull().default('active'),
+		titleEn: text('title_en'),
+		descriptionEn: text('description_en'),
+		titleKa: text('title_ka'),
+		descriptionKa: text('description_ka'),
 		publishedAt: timestamp('published_at', { withTimezone: true }).notNull().defaultNow(),
 		expiresAt: timestamp('expires_at', { withTimezone: true }),
-		createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow()
+		createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+		/** Когда последний раз проверяли актуальность объявления на t.me */
+		checkedAt: timestamp('checked_at', { withTimezone: true })
 	},
 	(table) => [
 		index('listings_city_idx').on(table.cityId),
 		index('listings_category_idx').on(table.categoryId),
 		index('listings_status_idx').on(table.status),
 		index('listings_published_idx').on(table.publishedAt),
-		index('listings_group_content_hash_idx').on(table.telegramGroupId, table.contentHash)
+		// Используется для дедупа по contentHash внутри города при парсинге и cleanup
+		index('listings_city_status_hash_idx').on(table.cityId, table.status, table.contentHash),
+		// Используется для дедупа по контакту внутри города
+		index('listings_city_contact_idx').on(table.cityId, table.contact),
+		// Используется чекером актуальности: active + checkedAt ASC (сначала непроверенные)
+		index('listings_status_checked_idx').on(table.status, table.checkedAt)
 	]
 );
 

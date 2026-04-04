@@ -1,4 +1,4 @@
-# TradeHub на VPS Beget (Ubuntu)
+# teleposter на VPS Beget (Ubuntu)
 
 Цель: сайт на Node за **nginx**, **PostgreSQL**, автопарсер Telegram по таймеру, обновления через **git** или архив с Mac.
 
@@ -17,8 +17,8 @@ node -v
 ```bash
 apt-get update
 apt-get install -y postgresql
-sudo -u postgres psql -c "CREATE USER tradehub WITH PASSWORD 'СЛОЖНЫЙ_ПАРОЛЬ';"
-sudo -u postgres psql -c "CREATE DATABASE tradehub OWNER tradehub;"
+sudo -u postgres psql -c "CREATE USER teleposter WITH PASSWORD 'СЛОЖНЫЙ_ПАРОЛЬ';"
+sudo -u postgres psql -c "CREATE DATABASE teleposter OWNER teleposter;"
 ```
 
 ### 1.3 Код приложения
@@ -28,29 +28,29 @@ sudo -u postgres psql -c "CREATE DATABASE tradehub OWNER tradehub;"
 ```bash
 apt-get install -y git
 cd /opt
-rm -rf tradehub
+rm -rf teleposter
 git clone https://github.com/ВАШ_ЛОГИН/TradeHub_app.git TradeHub_app
 # если в репозитории код в подпапке tradehub:
-ln -sfn /opt/TradeHub_app/tradehub /opt/tradehub
+ln -sfn /opt/TradeHub_app/tradehub /opt/teleposter
 # или если корень репозитория = само приложение:
-# mv нужным образом, главное чтобы /opt/tradehub содержал package.json
+# mv нужным образом, главное чтобы /opt/teleposter содержал package.json
 ```
 
-**Вариант B — как раньше, архив с Mac:** `deploy-to-server.sh` распакует в `/opt/tradehub`.
+**Вариант B — как раньше, архив с Mac:** `deploy-to-server.sh` распакует в `/opt/teleposter` (архив по-прежнему содержит папку `tradehub`, на сервере она переименовывается в `teleposter`).
 
-### 1.4 Файл `/opt/tradehub/.env`
+### 1.4 Файл `/opt/teleposter/.env`
 
 Создайте и заполните (минимум):
 
 ```env
-DATABASE_URL="postgres://tradehub:СЛОЖНЫЙ_ПАРОЛЬ@127.0.0.1:5432/tradehub?sslmode=disable"
+DATABASE_URL="postgres://teleposter:СЛОЖНЫЙ_ПАРОЛЬ@127.0.0.1:5432/teleposter?sslmode=disable"
 ADMIN_KEY="случайная_длинная_строка"
 ```
 
 ### 1.5 Сборка, схема БД, сиды
 
 ```bash
-cd /opt/tradehub
+cd /opt/teleposter
 npm install
 npm run build
 npm run db:push
@@ -62,19 +62,19 @@ npm run db:seed
 Скопируйте юниты и включите сервисы:
 
 ```bash
-cd /opt/tradehub
-install -m 644 deploy/systemd/tradehub.service /etc/systemd/system/
-install -m 644 deploy/systemd/tradehub-parser.service /etc/systemd/system/
-install -m 644 deploy/systemd/tradehub-parser.timer /etc/systemd/system/
+cd /opt/teleposter
+install -m 644 deploy/systemd/teleposter.service /etc/systemd/system/
+install -m 644 deploy/systemd/teleposter-parser.service /etc/systemd/system/
+install -m 644 deploy/systemd/teleposter-parser.timer /etc/systemd/system/
 systemctl daemon-reload
-systemctl enable --now tradehub.service
-systemctl enable --now tradehub-parser.timer
+systemctl enable --now teleposter.service
+systemctl enable --now teleposter-parser.timer
 ```
 
 Проверка:
 
 ```bash
-systemctl status tradehub.service --no-pager
+systemctl status teleposter.service --no-pager
 curl -s -o /dev/null -w "%{http_code}\n" http://127.0.0.1:3000/
 ```
 
@@ -82,8 +82,8 @@ curl -s -o /dev/null -w "%{http_code}\n" http://127.0.0.1:3000/
 
 ```bash
 apt-get install -y nginx
-cp /opt/tradehub/deploy/nginx/tradehub.example.conf /etc/nginx/sites-available/tradehub
-ln -sf /etc/nginx/sites-available/tradehub /etc/nginx/sites-enabled/
+cp /opt/teleposter/deploy/nginx/teleposter.example.conf /etc/nginx/sites-available/teleposter
+ln -sf /etc/nginx/sites-available/teleposter /etc/nginx/sites-enabled/
 rm -f /etc/nginx/sites-enabled/default
 nginx -t && systemctl reload nginx
 ```
@@ -97,23 +97,23 @@ nginx -t && systemctl reload nginx
 **Через Git:**
 
 ```bash
-cd /opt/TradeHub_app   # или /opt/tradehub если это и есть репозиторий
+cd /opt/TradeHub_app   # или /opt/teleposter если это и есть репозиторий
 git pull
-cd /opt/tradehub
+cd /opt/teleposter
 npm install
 npm run build
 npm run db:push
-systemctl restart tradehub.service
+systemctl restart teleposter.service
 ```
 
-**С Mac (архив):** `./tradehub/scripts/deploy-to-server.sh` — `remote-deploy.sh` на сервере **сохраняет** старый `.env` в `/root/tradehub.env.backup` перед распаковкой.
+**С Mac (архив):** `./tradehub/scripts/deploy-to-server.sh` — `remote-deploy.sh` на сервере **сохраняет** старый `.env` в `/root/teleposter.env.backup` перед распаковкой.
 
 **SSH по ключу (удобно для Cursor / CI, без пароля):**
 
-1. На своей машине: `ssh-keygen -t ed25519 -f ~/.ssh/tradehub_deploy -N ""`
-2. На сервере под root: `mkdir -p ~/.ssh && chmod 700 ~/.ssh` и добавь строку из `~/.ssh/tradehub_deploy.pub` в `~/.ssh/authorized_keys`, затем `chmod 600 ~/.ssh/authorized_keys`
+1. На своей машине: `ssh-keygen -t ed25519 -f ~/.ssh/teleposter_deploy -N ""`
+2. На сервере под root: `mkdir -p ~/.ssh && chmod 700 ~/.ssh` и добавь строку из `~/.ssh/teleposter_deploy.pub` в `~/.ssh/authorized_keys`, затем `chmod 600 ~/.ssh/authorized_keys`
 3. Деплой:  
-   `DEPLOY_HOST=root@ВАШ_IP DEPLOY_SSH_KEY=~/.ssh/tradehub_deploy bash tradehub/scripts/deploy-to-server.sh`  
+   `DEPLOY_HOST=root@ВАШ_IP DEPLOY_SSH_KEY=~/.ssh/teleposter_deploy bash tradehub/scripts/deploy-to-server.sh`  
    Параметры см. в `tradehub/scripts/deploy-env.example` (порт `DEPLOY_SSH_PORT`, ключ из переменной `DEPLOY_SSH_KEY_CONTENT` для секретов в Cursor).
 
 ---
@@ -123,8 +123,8 @@ systemctl restart tradehub.service
 1. Зайдите на **`/admin/groups`** (при необходимости ограничьте доступ в nginx по IP).
 2. Добавьте публичные группы `t.me/...`.
 3. Парсер уже по таймеру; разовый запуск:  
-   `systemctl start tradehub-parser.service`  
-4. Логи: `journalctl -u tradehub-parser.service -f`
+   `systemctl start teleposter-parser.service`  
+4. Логи: `journalctl -u teleposter-parser.service -f`
 
 ---
 
@@ -132,9 +132,9 @@ systemctl restart tradehub.service
 
 | Симптом | Действие |
 |--------|----------|
-| 502 от nginx | `systemctl status tradehub` — упал Node; смотрите `journalctl -u tradehub -n 50` |
+| 502 от nginx | `systemctl status teleposter` — упал Node; смотрите `journalctl -u teleposter -n 50` |
 | 503 на сайте | Неверный `DATABASE_URL` или не сделан `db:push` |
-| Парсер не крутится | `systemctl status tradehub-parser.timer` |
+| Парсер не крутится | `systemctl status teleposter-parser.timer` |
 
 ---
 
@@ -156,9 +156,9 @@ systemctl restart tradehub.service
 Готовый конфиг в репозитории: `deploy/nginx/barakali.online.conf` — прокси на `127.0.0.1:3000`, редирект `www` → без `www`.
 
 ```bash
-sudo cp /opt/tradehub/deploy/nginx/barakali.online.conf /etc/nginx/sites-available/barakali.online
+sudo cp /opt/teleposter/deploy/nginx/barakali.online.conf /etc/nginx/sites-available/barakali.online
 sudo ln -sf /etc/nginx/sites-available/barakali.online /etc/nginx/sites-enabled/
-# если раньше был только дефолтный tradehub.example.conf на все хосты — отключите конфликт:
+# если раньше был только дефолтный teleposter.example.conf на все хосты — отключите конфликт:
 # sudo rm -f /etc/nginx/sites-enabled/default
 sudo nginx -t && sudo systemctl reload nginx
 ```

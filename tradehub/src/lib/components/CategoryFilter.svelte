@@ -1,4 +1,6 @@
 <script lang="ts">
+	import './CategoryFilter.css';
+	import { _ } from 'svelte-i18n';
 	import type { Category } from '$lib/types';
 
 	let {
@@ -27,7 +29,7 @@
 		onclick={() => handleClick('')}
 		id="category-all"
 	>
-		Все
+		{$_('category_all')}
 	</button>
 	{#each categories as cat (cat.id)}
 		<button
@@ -36,52 +38,7 @@
 			onclick={() => handleClick(cat.slug)}
 			id="category-{cat.slug}"
 		>
-			{cat.name}
+			{$_(`cat_${cat.slug}`) || cat.name}
 		</button>
 	{/each}
 </div>
-
-<style>
-	.category-filter {
-		display: flex;
-		gap: 0.5rem;
-		overflow-x: auto;
-		padding: 0.25rem 0;
-		scrollbar-width: none;
-		-ms-overflow-style: none;
-	}
-
-	.category-filter::-webkit-scrollbar {
-		display: none;
-	}
-
-	.filter-chip {
-		display: flex;
-		align-items: center;
-		gap: 0.375rem;
-		padding: 0.5rem 1rem;
-		border: 1px solid var(--border);
-		border-radius: var(--radius-full);
-		background: var(--bg-card);
-		color: var(--text-secondary);
-		font-family: var(--font-sans);
-		font-size: 0.8125rem;
-		font-weight: 500;
-		cursor: pointer;
-		white-space: nowrap;
-		transition: all var(--transition-fast);
-		min-height: 40px;
-	}
-
-	.filter-chip:hover {
-		border-color: var(--border-hover);
-		background: var(--bg-card-hover);
-		color: var(--text-primary);
-	}
-
-	.filter-chip.active {
-		background: var(--text-primary);
-		border-color: var(--text-primary);
-		color: var(--bg-secondary);
-	}
-</style>

@@ -8,32 +8,38 @@ export const load: PageServerLoad = async ({ params }) => {
 	try {
 		const { db } = await import('$lib/server/db');
 		const { listings } = await import('$lib/server/db/schema');
+		const { listingHasPhotosSql } = await import('$lib/server/db/listing-photo-filter');
 		const { and, desc, eq, ne } = await import('drizzle-orm');
 
-		const result = await db.query.listings.findFirst({
+		// Ищем без фильтра статуса — чтобы отличить «удалено» от «не существует»
+		const raw = await db.query.listings.findFirst({
 			where: eq(listings.id, id),
-			with: {
-				city: true,
-				category: true,
-				telegramGroup: true
-			}
+			with: { city: true, category: true, telegramGroup: true }
 		});
 
-		if (!result) throw error(404, 'Объявление не найдено');
+		// ID вообще не существует — настоящий 404
+		if (!raw) throw error(404, 'Объявление не найдено');
 
+		const isGone = raw.status === 'expired' || raw.status === 'filtered';
+		// active, но без фото — тоже считаем недоступным для показа
+		const hasPhotos = Array.isArray(raw.images) && raw.images.length > 0;
+		const unavailable = isGone || (!hasPhotos && raw.status === 'active');
+
+		// Подбираем похожие объявления (для обоих случаев — и живых, и ушедших)
 		const relatedLimit = 4;
-		const relatedPrimary = result.categoryId
+		const cityId = raw.cityId;
+		const categoryId = raw.categoryId;
+
+		const relatedPrimary = categoryId
 			? await db.query.listings.findMany({
 					where: and(
 						eq(listings.status, 'active'),
-						eq(listings.cityId, result.cityId),
-						eq(listings.categoryId, result.categoryId),
-						ne(listings.id, result.id)
+						listingHasPhotosSql,
+						eq(listings.cityId, cityId),
+						eq(listings.categoryId, categoryId),
+						ne(listings.id, id)
 					),
-					with: {
-						city: true,
-						category: true
-					},
+					with: { city: true, category: true, telegramGroup: true },
 					orderBy: [desc(listings.publishedAt)],
 					limit: relatedLimit
 				})
@@ -42,27 +48,35 @@ export const load: PageServerLoad = async ({ params }) => {
 		const missing = relatedLimit - relatedPrimary.length;
 		const relatedFallbackConditions = [
 			eq(listings.status, 'active'),
-			eq(listings.cityId, result.cityId),
-			ne(listings.id, result.id)
+			listingHasPhotosSql,
+			eq(listings.cityId, cityId),
+			ne(listings.id, id)
 		];
-		if (result.categoryId) {
-			relatedFallbackConditions.push(ne(listings.categoryId, result.categoryId));
-		}
+		if (categoryId) relatedFallbackConditions.push(ne(listings.categoryId, categoryId));
 
 		const relatedFallback =
 			missing > 0
 				? await db.query.listings.findMany({
 						where: and(...relatedFallbackConditions),
-						with: {
-							city: true,
-							category: true
-						},
+						with: { city: true, category: true, telegramGroup: true },
 						orderBy: [desc(listings.publishedAt)],
 						limit: missing
 					})
 				: [];
 
-		return { listing: result, relatedListings: [...relatedPrimary, ...relatedFallback] };
+		const relatedListings = [...relatedPrimary, ...relatedFallback];
+
+		if (unavailable) {
+			// Возвращаем заглушку с городом и похожими — не бросаем 404
+			return {
+				gone: true as const,
+				city: raw.city,
+				relatedListings,
+				listing: null
+			};
+		}
+
+		return { gone: false as const, listing: raw, relatedListings };
 	} catch (e: unknown) {
 		if (e && typeof e === 'object' && 'status' in e) throw e;
 		console.error('[listing] database error', e);
