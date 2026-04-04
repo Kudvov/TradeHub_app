@@ -2,8 +2,7 @@
 	import './city-page.css';
 	import CategoryFilter from '$lib/components/CategoryFilter.svelte';
 	import PeriodSelect from '$lib/components/PeriodSelect.svelte';
-	import PriceFilter from '$lib/components/PriceFilter.svelte';
-	import ListingCard from '$lib/components/ListingCard.svelte';
+import ListingCard from '$lib/components/ListingCard.svelte';
 	import type { ListingPeriodSlug } from '$lib/listing-period';
 	import { goto } from '$app/navigation';
 	import { _ } from 'svelte-i18n';
@@ -42,11 +41,7 @@
 		goto(buildUrl({ period: slug, page: 1 }));
 	}
 
-	function handlePriceFilter(min: number | null, max: number | null) {
-		goto(buildUrl({ priceMin: min, priceMax: max, page: 1 }));
-	}
-
-	function handlePage(page: number) {
+function handlePage(page: number) {
 		goto(buildUrl({ page }));
 	}
 
@@ -116,13 +111,20 @@
 					/>
 				</div>
 				<div class="city-filters-right">
-					{#key `${data.filters.priceMin}-${data.filters.priceMax}`}
-						<PriceFilter
-							priceMin={data.filters.priceMin}
-							priceMax={data.filters.priceMax}
-							onFilter={handlePriceFilter}
-						/>
-					{/key}
+					<form method="GET" action="/{data.city.slug}" class="price-filter-form">
+						{#if data.filters.categorySlug}<input type="hidden" name="category" value={data.filters.categorySlug} />{/if}
+						{#if data.filters.query}<input type="hidden" name="q" value={data.filters.query} />{/if}
+						{#if data.filters.periodSlug}<input type="hidden" name="period" value={data.filters.periodSlug} />{/if}
+						<div class="price-filter-inputs">
+							<input class="price-input" type="text" inputmode="numeric" pattern="[0-9]*" name="priceMin" placeholder={$_('price_from')} value={data.filters.priceMin ?? ''} aria-label={$_('price_from')} />
+							<span class="price-sep">—</span>
+							<input class="price-input" type="text" inputmode="numeric" pattern="[0-9]*" name="priceMax" placeholder={$_('price_to')} value={data.filters.priceMax ?? ''} aria-label={$_('price_to')} />
+							<button type="submit" class="btn btn-sm btn-secondary">{$_('apply')}</button>
+							{#if data.filters.priceMin !== null || data.filters.priceMax !== null}
+								<a href="/{data.city.slug}{data.filters.categorySlug ? `?category=${data.filters.categorySlug}` : ''}" class="price-reset" aria-label={$_('reset_filter')}>✕</a>
+							{/if}
+						</div>
+					</form>
 					<PeriodSelect activePeriod={data.filters.periodSlug} onSelect={handlePeriodSelect} />
 				</div>
 			</div>
