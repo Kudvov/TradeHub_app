@@ -116,11 +116,13 @@
 					/>
 				</div>
 				<div class="city-filters-right">
-					<PriceFilter
-						priceMin={data.filters.priceMin}
-						priceMax={data.filters.priceMax}
-						onFilter={handlePriceFilter}
-					/>
+					{#key `${data.filters.priceMin}-${data.filters.priceMax}`}
+						<PriceFilter
+							priceMin={data.filters.priceMin}
+							priceMax={data.filters.priceMax}
+							onFilter={handlePriceFilter}
+						/>
+					{/key}
 					<PeriodSelect activePeriod={data.filters.periodSlug} onSelect={handlePeriodSelect} />
 				</div>
 			</div>

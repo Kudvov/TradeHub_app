@@ -11,17 +11,12 @@
 		onFilter: (min: number | null, max: number | null) => void;
 	} = $props();
 
-	let minVal = $state<number | ''>(priceMin ?? '');
-	let maxVal = $state<number | ''>(priceMax ?? '');
-
-	$effect(() => {
-		minVal = priceMin ?? '';
-		maxVal = priceMax ?? '';
-	});
+	let minVal = $state(priceMin !== null ? String(priceMin) : '');
+	let maxVal = $state(priceMax !== null ? String(priceMax) : '');
 
 	function apply() {
-		const min = minVal !== '' ? Number(minVal) : null;
-		const max = maxVal !== '' ? Number(maxVal) : null;
+		const min = minVal.trim() !== '' ? parseFloat(minVal) : null;
+		const max = maxVal.trim() !== '' ? parseFloat(maxVal) : null;
 		if ((min !== null && isNaN(min)) || (max !== null && isNaN(max))) return;
 		onFilter(min, max);
 	}
@@ -43,7 +38,7 @@
 	<div class="price-filter-inputs">
 		<input
 			class="price-input"
-			type="number"
+			type="text" inputmode="numeric" pattern="[0-9]*"
 			min="0"
 			step="1"
 			placeholder={$_('price_from')}
@@ -54,7 +49,7 @@
 		<span class="price-sep">—</span>
 		<input
 			class="price-input"
-			type="number"
+			type="text" inputmode="numeric" pattern="[0-9]*"
 			min="0"
 			step="1"
 			placeholder={$_('price_to')}
