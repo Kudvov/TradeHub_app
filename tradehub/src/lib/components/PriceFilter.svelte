@@ -11,17 +11,17 @@
 		onFilter: (min: number | null, max: number | null) => void;
 	} = $props();
 
-	let minVal = $state(priceMin !== null ? String(priceMin) : '');
-	let maxVal = $state(priceMax !== null ? String(priceMax) : '');
+	let minVal = $state<number | ''>(priceMin ?? '');
+	let maxVal = $state<number | ''>(priceMax ?? '');
 
 	$effect(() => {
-		minVal = priceMin !== null ? String(priceMin) : '';
-		maxVal = priceMax !== null ? String(priceMax) : '';
+		minVal = priceMin ?? '';
+		maxVal = priceMax ?? '';
 	});
 
 	function apply() {
-		const min = minVal.trim() !== '' ? parseFloat(minVal) : null;
-		const max = maxVal.trim() !== '' ? parseFloat(maxVal) : null;
+		const min = minVal !== '' ? Number(minVal) : null;
+		const max = maxVal !== '' ? Number(maxVal) : null;
 		if ((min !== null && isNaN(min)) || (max !== null && isNaN(max))) return;
 		onFilter(min, max);
 	}
@@ -32,11 +32,11 @@
 		onFilter(null, null);
 	}
 
-	const hasFilter = $derived(priceMin !== null || priceMax !== null);
-
 	function handleKeydown(e: KeyboardEvent) {
 		if (e.key === 'Enter') apply();
 	}
+
+	const hasFilter = $derived(priceMin !== null || priceMax !== null);
 </script>
 
 <div class="price-filter">
