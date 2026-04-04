@@ -14,6 +14,11 @@
 	let minVal = $state(priceMin !== null ? String(priceMin) : '');
 	let maxVal = $state(priceMax !== null ? String(priceMax) : '');
 
+	$effect(() => {
+		minVal = priceMin !== null ? String(priceMin) : '';
+		maxVal = priceMax !== null ? String(priceMax) : '';
+	});
+
 	function apply() {
 		const min = minVal.trim() !== '' ? parseFloat(minVal) : null;
 		const max = maxVal.trim() !== '' ? parseFloat(maxVal) : null;
