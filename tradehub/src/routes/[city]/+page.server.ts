@@ -19,7 +19,7 @@ export const load: PageServerLoad = async ({ params, url, cookies }) => {
 		const { cities, categories, listings, telegramGroups } = await import('$lib/server/db/schema');
 		const { listingHasPhotosSql } = await import('$lib/server/db/listing-photo-filter');
 		const { listingPublishedInPeriodSql } = await import('$lib/server/listing-period-sql');
-		const { eq, and, ilike, sql, desc, count, asc, inArray, gte, lte, isNotNull } = await import('drizzle-orm');
+		const { eq, and, ilike, sql, desc, count, asc, inArray, isNotNull } = await import('drizzle-orm');
 
 		const [city] = await db.select().from(cities).where(eq(cities.slug, citySlug)).limit(1);
 		if (!city) throw error(404, 'Город не найден');
@@ -53,11 +53,11 @@ export const load: PageServerLoad = async ({ params, url, cookies }) => {
 
 		if (priceMin !== null) {
 			conditions.push(isNotNull(listings.price));
-			conditions.push(gte(listings.price, String(priceMin)));
+			conditions.push(sql`${listings.price}::numeric >= ${priceMin}`);
 		}
 		if (priceMax !== null) {
 			conditions.push(isNotNull(listings.price));
-			conditions.push(lte(listings.price, String(priceMax)));
+			conditions.push(sql`${listings.price}::numeric <= ${priceMax}`);
 		}
 
 		const where = and(...conditions);
