@@ -16,6 +16,19 @@ import { resolve } from 'path';
 
 dotenv.config({ path: resolve(process.cwd(), '.env') });
 
+/** Первое сообщение альбома без фото — вставка в БД откладывается, пока не придут кадры в continuation */
+type AlbumDeferred = {
+	messageId: number;
+	fingerprint: string;
+	title: string;
+	description: string | null;
+	price: string | null;
+	currency: string;
+	contact: string | null;
+	categoryId: number;
+	publishedAt: Date;
+};
+
 // Количество подряд идущих ошибок "не найдено", после которых считаем,
 // что достигли конца (нет новых сообщений). Сообщения иногда удаляют, поэтому 1-2 ошибки — норма.
 const MAX_CONSECUTIVE_ERRORS = 2000;
@@ -46,18 +59,6 @@ async function syncGroup(
 	let albumDate: string | null = null;
 	let albumImages: string[] = [];
 	let albumListingId: number | null = null; // ID записи в БД для обновления фото
-	/** Первое сообщение альбома без фото — вставка в БД откладывается, пока не придут кадры в continuation */
-	type AlbumDeferred = {
-		messageId: number;
-		fingerprint: string;
-		title: string;
-		description: string | null;
-		price: string | null;
-		currency: string;
-		contact: string | null;
-		categoryId: number;
-		publishedAt: Date;
-	};
 	let albumDeferred: AlbumDeferred | null = null;
 
 	const flushAlbum = async () => {
@@ -111,29 +112,30 @@ async function syncGroup(
 			if (isAlbumContinuation) {
 				albumImages.push(...parsed.images);
 				if (albumListingId === null && albumDeferred && albumImages.length > 0) {
+					const deferred = albumDeferred as AlbumDeferred;
 					let closedDeferred = false;
-					if (albumDeferred.contact && (await isContactBanned(albumDeferred.contact))) {
+					if (deferred.contact && (await isContactBanned(deferred.contact))) {
 						albumDeferred = null;
 						process.stdout.write('b');
 						closedDeferred = true;
 					}
-					if (!closedDeferred && albumDeferred) {
+					if (!closedDeferred) {
 						const inserted = await db
 							.insert(listings)
 							.values({
-								telegramMessageId: BigInt(albumDeferred.messageId),
+								telegramMessageId: BigInt(deferred.messageId),
 								telegramGroupId: groupId,
 								cityId: cityId,
-								categoryId: albumDeferred.categoryId || 9,
-								title: albumDeferred.title,
-								description: albumDeferred.description,
-								price: albumDeferred.price,
-								currency: albumDeferred.currency || 'GEL',
-								contact: albumDeferred.contact,
-								contentHash: albumDeferred.fingerprint,
+								categoryId: deferred.categoryId || 9,
+								title: deferred.title,
+								description: deferred.description,
+								price: deferred.price,
+								currency: deferred.currency || 'GEL',
+								contact: deferred.contact,
+								contentHash: deferred.fingerprint,
 								images: albumImages.slice(0, 10),
 								status: 'active',
-								publishedAt: albumDeferred.publishedAt
+								publishedAt: deferred.publishedAt
 							})
 							.returning({ id: listings.id });
 						albumListingId = inserted[0]?.id ?? null;

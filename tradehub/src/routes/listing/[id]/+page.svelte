@@ -74,7 +74,7 @@
 	const hasAuthorDm = $derived(canWriteSeller && hasValidContactHref);
 	const showBothCtas = $derived(hasAuthorDm && hasOpenPost);
 
-	const images: string[] = $derived(listing.images && listing.images.length > 0
+	const images: string[] = $derived(listing?.images && listing.images.length > 0
 		? listing.images
 		: ['https://placehold.co/800x600/1a1a2e/6a6a7a?text=No+Photo']);
 
@@ -331,7 +331,7 @@
 			<div class="detail-info" id="listing-info">
 				<div class="detail-meta">
 					<div class="detail-meta-left">
-						<span class="detail-date text-muted text-sm">{formatDate(listing?.publishedAt, $locale ?? 'ru')}</span>
+						<span class="detail-date text-muted text-sm">{formatDate(listing?.publishedAt ?? null, $locale ?? 'ru')}</span>
 						{#if listing?.category}
 							<span class="badge">{listing.category.icon} {categoryName}</span>
 						{/if}
