@@ -12,7 +12,7 @@ export const load: PageServerLoad = async ({ params, url, cookies }) => {
 	const requestedPage = Math.max(1, parseInt(url.searchParams.get('page') ?? '1'));
 	const priceMin = url.searchParams.get('priceMin') ? parseFloat(url.searchParams.get('priceMin')!) : null;
 	const priceMax = url.searchParams.get('priceMax') ? parseFloat(url.searchParams.get('priceMax')!) : null;
-	const limit = 20;
+	const limit = 40;
 
 	try {
 		const { db } = await import('$lib/server/db');

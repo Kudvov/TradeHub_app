@@ -11,12 +11,19 @@
 }
 
 /* ─── LEFT SIDEBAR ───────────────────────────────────── */
+/* Под шапку (64px) + липкую строку поиска (layout-search-sticky: padding + search-bar ≈ 3.5rem) */
 .city-sidebar {
 	position: sticky;
-	top: 80px;
+	top: calc(64px + 0.8rem + 3.5rem);
+	max-height: calc(100dvh - 64px - 0.8rem - 3.5rem - 0.75rem);
+	overflow-x: hidden;
+	overflow-y: auto;
+	overscroll-behavior: contain;
 	display: flex;
 	flex-direction: column;
 	gap: 1.5rem;
+	align-self: start;
+	z-index: 1;
 }
 
 .sidebar-header {
