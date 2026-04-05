@@ -95,6 +95,7 @@
 					</p>
 				</div>
 
+				<div class="city-sidebar-sticky">
 				<!-- Period -->
 				<div class="sidebar-section">
 					<p class="sidebar-label">{$_('period_label')}</p>
@@ -127,6 +128,7 @@
 							{/if}
 						</div>
 					</form>
+				</div>
 				</div>
 			</aside>
 

@@ -1,8 +1,9 @@
 .period-select-field {
 	position: relative;
-	display: inline-flex;
+	display: flex;
+	width: 100%;
+	min-width: 0;
 	flex-shrink: 0;
-	max-width: min(100%, 12rem);
 }
 
 /* Стрелка как у кастомных контролов; цвет из темы */

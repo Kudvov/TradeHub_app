@@ -11,8 +11,17 @@
 }
 
 /* ─── LEFT SIDEBAR ───────────────────────────────────── */
-/* Сразу под липкой полосой поиска (те же переменные, что в app.css + layout.css) */
+/* Заголовок города в обычном потоке — не в sticky, иначе при «прилипании» визуальный скачок. */
 .city-sidebar {
+	display: flex;
+	flex-direction: column;
+	gap: 1.5rem;
+	align-self: start;
+	z-index: 20;
+}
+
+/* Только фильтры липнут под шапку + поиск */
+.city-sidebar-sticky {
 	position: sticky;
 	top: calc(var(--sticky-header-height) + var(--sticky-search-stripe));
 	max-height: calc(
@@ -24,8 +33,6 @@
 	display: flex;
 	flex-direction: column;
 	gap: 1.5rem;
-	align-self: start;
-	z-index: 20;
 }
 
 .sidebar-header {
@@ -83,8 +90,8 @@
 }
 
 .city-sidebar .filter-chip.active {
-	/* Темнее ховера (--bg-card-hover), без рамки */
-	background: color-mix(in srgb, var(--text-primary) 20%, var(--bg-card-hover));
+	/* Чуть светлее ховера: меньше смеси с text-primary */
+	background: color-mix(in srgb, var(--text-primary) 10%, var(--bg-card-hover));
 	border-color: transparent;
 	color: var(--text-primary);
 }
@@ -226,7 +233,13 @@
 	}
 
 	.city-sidebar {
+		gap: 0.75rem;
+	}
+
+	.city-sidebar-sticky {
 		position: static;
+		max-height: none;
+		overflow: visible;
 		gap: 0.75rem;
 	}
 
