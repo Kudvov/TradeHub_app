@@ -62,7 +62,7 @@ async function main() {
 				continue;
 			}
 
-			const extracted = extractData(text, undefined);
+			const extracted = await extractData(text, undefined);
 			const nextCategoryId = extracted.categoryId || 9;
 			const shouldActivate = listing.status !== 'active';
 			const shouldRecategorize = listing.categoryId !== nextCategoryId;

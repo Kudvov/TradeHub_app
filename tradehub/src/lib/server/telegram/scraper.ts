@@ -1,6 +1,6 @@
 import * as cheerio from 'cheerio';
 import { ProxyAgent } from 'undici';
-import { extractData } from './extractor';
+import { extractData, type ExtractedData } from './extractor';
 import { findStopWord } from './stop-words';
 import { classifyListing } from './classifier';
 
@@ -11,7 +11,7 @@ export interface ScrapedMessage {
 	images: string[];
 	date: Date | null;
 	author: string | null;
-	extracted: ReturnType<typeof extractData>;
+	extracted: ExtractedData;
 }
 
 const FETCH_TIMEOUT_MS = Number(process.env.PARSER_FETCH_TIMEOUT_MS ?? 12000);
@@ -353,7 +353,7 @@ export async function scrapeMessageWithKind(
 				images,
 				date,
 				author,
-				extracted: extractData(text, author || undefined, groupHandle, classified.categorySlug)
+				extracted: await extractData(text, author || undefined, groupHandle, classified.categorySlug)
 			}
 		};
 	} catch (error) {
