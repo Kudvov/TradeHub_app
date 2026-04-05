@@ -1,4 +1,4 @@
-/* Анимированная градиентная обводка 2px — премиум-группы (@BatumiTradeHub, @TbilisiTradeHub) */
+/* Светло-жёлтая обводка карточки — премиум-группы (@BatumiTradeHub, @TbilisiTradeHub) */
 @keyframes premium-gradient-flow {
 	0% {
 		background-position: 0% 50%;
@@ -42,12 +42,13 @@
 	padding: var(--premium-border-width);
 	background: linear-gradient(
 		115deg,
-		color-mix(in srgb, var(--gray-700) 35%, #8b5cf6),
-		color-mix(in srgb, var(--gray-600) 30%, #22d3ee),
-		color-mix(in srgb, var(--gray-700) 40%, #eab308),
-		color-mix(in srgb, var(--gray-600) 28%, #ec4899),
-		color-mix(in srgb, var(--gray-700) 38%, #a78bfa),
-		color-mix(in srgb, var(--gray-700) 35%, #8b5cf6)
+		#fffbeb,
+		#fef9c3,
+		#fef08a,
+		#fde047,
+		#facc15,
+		#fef9c3,
+		#fffbeb
 	);
 	background-size: 320% 320%;
 	animation: premium-gradient-flow 5s ease infinite;
@@ -62,12 +63,13 @@
 html.dark .premium-gradient-border::after {
 	background: linear-gradient(
 		115deg,
-		color-mix(in srgb, var(--gray-400) 25%, #a78bfa),
-		color-mix(in srgb, var(--gray-400) 20%, #22d3ee),
-		color-mix(in srgb, var(--gray-300) 22%, #fbbf24),
-		color-mix(in srgb, var(--gray-400) 18%, #f472b6),
-		color-mix(in srgb, var(--gray-300) 24%, #c4b5fd),
-		color-mix(in srgb, var(--gray-400) 25%, #a78bfa)
+		color-mix(in srgb, #fef08a 70%, var(--gray-800)),
+		color-mix(in srgb, #fde047 75%, var(--gray-900)),
+		color-mix(in srgb, #facc15 65%, var(--gray-800)),
+		color-mix(in srgb, #eab308 55%, var(--gray-900)),
+		color-mix(in srgb, #fde047 75%, var(--gray-800)),
+		color-mix(in srgb, #fef08a 70%, var(--gray-900)),
+		color-mix(in srgb, #fef9c3 80%, var(--gray-800))
 	);
 	background-size: 320% 320%;
 }

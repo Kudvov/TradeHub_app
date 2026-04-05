@@ -58,7 +58,7 @@
 			</div>
 			<div class="premium-add-body">
 				<p>
-					На сайте у объявлений из группы <strong>@{cfg.username}</strong> — <strong>анимированная градиентная обводка</strong> (2&nbsp;px)
+					На сайте у объявлений из группы <strong>@{cfg.username}</strong> — <strong>светлая жёлтая обводка</strong>
 					вокруг карточки; такие посты показываются выше остальных в ленте {cityLabel}.
 				</p>
 				<p class="premium-add-note">

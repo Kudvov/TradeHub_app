@@ -1,4 +1,4 @@
-/** Премиум-группы Telegram по городу: градиентная обводка карточки (2px) и приоритет в ленте. */
+/** Премиум-группы Telegram по городу: светло-жёлтая обводка карточки и приоритет в ленте. */
 export const PREMIUM_TELEGRAM_BY_CITY_SLUG = {
 	batumi: { username: 'BatumiTradeHub', url: 'https://t.me/BatumiTradeHub' },
 	tbilisi: { username: 'TbilisiTradeHub', url: 'https://t.me/TbilisiTradeHub' }
