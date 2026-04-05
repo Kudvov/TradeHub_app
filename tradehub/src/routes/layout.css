@@ -42,16 +42,13 @@
 
 .layout-search-sticky {
 	position: sticky;
-	top: 64px;
+	top: var(--sticky-header-height);
 	z-index: 90;
 	padding: 0.35rem 0 0.45rem;
-	background: var(--bg-primary);
-}
-
-@media (max-width: 480px) {
-	.layout-search-sticky {
-		top: 96px;
-	}
+	background: var(--header-glass);
+	backdrop-filter: blur(8px);
+	-webkit-backdrop-filter: blur(8px);
+	border-bottom: 1px solid color-mix(in srgb, var(--border) 65%, transparent);
 }
 
 .layout-search-inner {

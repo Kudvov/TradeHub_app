@@ -11,11 +11,11 @@
 }
 
 /* ─── LEFT SIDEBAR ───────────────────────────────────── */
-/* Под шапку (64px) + липкую строку поиска (layout-search-sticky: padding + search-bar ≈ 3.5rem) */
+/* Сразу под липкой полосой поиска (те же переменные, что в app.css + layout.css) */
 .city-sidebar {
 	position: sticky;
-	top: calc(64px + 0.8rem + 3.5rem);
-	max-height: calc(100dvh - 64px - 0.8rem - 3.5rem - 0.75rem);
+	top: calc(var(--sticky-header-height) + var(--sticky-search-stripe));
+	max-height: calc(100dvh - var(--sticky-header-height) - var(--sticky-search-stripe) - 0.75rem);
 	overflow-x: hidden;
 	overflow-y: auto;
 	overscroll-behavior: contain;
@@ -23,7 +23,7 @@
 	flex-direction: column;
 	gap: 1.5rem;
 	align-self: start;
-	z-index: 1;
+	z-index: 20;
 }
 
 .sidebar-header {
