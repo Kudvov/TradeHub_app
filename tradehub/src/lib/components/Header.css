@@ -50,7 +50,7 @@
 	font-weight: 500;
 	line-height: 1.2;
 	color: var(--text-secondary);
-	border: 1px solid var(--border);
+	border: none;
 	background: var(--bg-card);
 	box-shadow: var(--shadow-sm);
 	text-decoration: none;
@@ -60,7 +60,6 @@
 	-webkit-tap-highlight-color: transparent;
 	transition:
 		background var(--transition-fast),
-		border-color var(--transition-fast),
 		color var(--transition-fast),
 		box-shadow var(--transition-fast),
 		transform 0.08s ease;
@@ -68,7 +67,6 @@
 
 .city-btn:hover {
 	color: var(--text-primary);
-	border-color: var(--border-hover);
 	background: var(--bg-card-hover);
 	box-shadow: var(--shadow-md);
 }
@@ -85,14 +83,12 @@
 
 .city-btn--active {
 	color: var(--text-primary);
-	border-color: var(--text-primary);
 	font-weight: 600;
 	background: var(--bg-elevated);
 	box-shadow: var(--shadow-md);
 }
 
 .city-btn--active:hover {
-	border-color: var(--text-primary);
 	background: var(--bg-elevated);
 }
 
