@@ -5,6 +5,15 @@
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 
+	const REPORT_REASON_LABEL: Record<string, string> = {
+		spam: 'Спам / реклама',
+		fraud: 'Мошенничество',
+		prohibited: 'Запрещённый контент',
+		duplicate: 'Дубликат',
+		wrong_category: 'Не та категория',
+		other: 'Другое'
+	};
+
 	type AdminTab = 'parser' | 'logs' | 'groups' | 'stats' | 'reports' | 'ai' | 'docs';
 
 	type LivePayload = {
@@ -700,7 +709,10 @@
 								{#each data.reports as report}
 									<li class="report-row">
 										<div class="report-main">
-											<p><strong>Причина:</strong> {report.reason}</p>
+											<p>
+												<strong>Причина:</strong>
+												{REPORT_REASON_LABEL[report.reason] ?? report.reason}
+											</p>
 											<p><strong>Объявление:</strong> {report.listing?.title ?? 'Удалено'}</p>
 											<p><strong>Город:</strong> {report.listing?.city?.name ?? '—'}</p>
 											<p><strong>Контакт автора:</strong> {report.listing?.contact ?? '—'}</p>

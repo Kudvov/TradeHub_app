@@ -33,6 +33,7 @@
   "report_fraud": "Мошенничество",
   "report_prohibited": "Запрещённый контент",
   "report_duplicate": "Дубликат",
+  "report_wrong_category": "Не та категория",
   "report_other": "Другое",
   "report_comment": "Комментарий (необязательно)",
   "report_submit": "Отправить жалобу",

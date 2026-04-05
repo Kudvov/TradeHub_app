@@ -87,6 +87,7 @@
 
 			<!-- LEFT SIDEBAR: filters -->
 			<aside class="city-sidebar">
+				<div class="city-sidebar-sticky">
 				<div class="sidebar-header">
 					<h1 class="city-page-title">{$_(`city_${data.city.slug}`) || data.city.name}</h1>
 					<p class="city-page-count text-secondary">
@@ -95,7 +96,6 @@
 					</p>
 				</div>
 
-				<div class="city-sidebar-sticky">
 				<!-- Period -->
 				<div class="sidebar-section">
 					<p class="sidebar-label">{$_('period_label')}</p>

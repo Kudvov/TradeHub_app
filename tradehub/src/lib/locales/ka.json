@@ -33,6 +33,7 @@
   "report_fraud": "თაღლითობა",
   "report_prohibited": "აკრძალული კონტენტი",
   "report_duplicate": "დუბლიკატი",
+  "report_wrong_category": "არასწორი კატეგორია",
   "report_other": "სხვა",
   "report_comment": "კომენტარი (არასავალდებულო)",
   "report_submit": "საჩივრის გაგზავნა",

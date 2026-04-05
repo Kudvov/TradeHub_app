@@ -1,3 +1,4 @@
+import { CATEGORY_SLUG_TO_ID } from './category-ids';
 import { resolveGeminiModel } from './gemini-model';
 
 export interface ExtractedData {
@@ -66,20 +67,6 @@ function collectUsernamesFromText(text: string, groupHandle?: string): string[] 
 
 	return out;
 }
-
-// Соответствует порядку вставки в seed.ts + миграции
-const SLUG_TO_CATEGORY_ID: Record<string, number> = {
-	electronics: 1,
-	clothing: 2,
-	auto: 3,
-	furniture: 4,
-	realestate: 5,
-	services: 6,
-	kids: 7,
-	sport: 8,
-	other: 9,
-	animals: 37
-};
 
 interface GeminiExtractJson {
 	title?: string;
@@ -253,7 +240,7 @@ export function extractDataRegex(
 				username && isValidTelegramPublicUsername(username) && username.toLowerCase() !== groupNorm
 					? toTgLink(username)
 					: null,
-			categoryId: categorySlug ? (SLUG_TO_CATEGORY_ID[categorySlug] ?? null) : null
+			categoryId: categorySlug ? (CATEGORY_SLUG_TO_ID[categorySlug] ?? null) : null
 		};
 	}
 
@@ -284,7 +271,7 @@ export function extractDataRegex(
 	}
 
 	const contact = resolveContact(text, username, groupUsername, null);
-	const categoryId = categorySlug ? (SLUG_TO_CATEGORY_ID[categorySlug] ?? null) : null;
+	const categoryId = categorySlug ? (CATEGORY_SLUG_TO_ID[categorySlug] ?? null) : null;
 
 	return {
 		title,
@@ -316,7 +303,7 @@ export async function extractData(
 		return extractDataRegex(text, username, groupUsername, categorySlug);
 	}
 
-	const categoryId = categorySlug ? (SLUG_TO_CATEGORY_ID[categorySlug] ?? null) : null;
+	const categoryId = categorySlug ? (CATEGORY_SLUG_TO_ID[categorySlug] ?? null) : null;
 	const description = text;
 	const contact = resolveContact(text, username, groupUsername, partial.contact);
 

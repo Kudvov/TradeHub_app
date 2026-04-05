@@ -11,16 +11,12 @@
 }
 
 /* ─── LEFT SIDEBAR ───────────────────────────────────── */
-/* Заголовок города в обычном потоке — не в sticky, иначе при «прилипании» визуальный скачок. */
 .city-sidebar {
-	display: flex;
-	flex-direction: column;
-	gap: 1.5rem;
 	align-self: start;
 	z-index: 20;
 }
 
-/* Только фильтры липнут под шапку + поиск */
+/* Вся колонка (заголовок + фильтры) липнет под шапку и поиск; при нехватке высоты — скролл внутри */
 .city-sidebar-sticky {
 	position: sticky;
 	top: calc(var(--sticky-header-height) + var(--sticky-search-stripe));
@@ -230,10 +226,6 @@
 	.city-layout {
 		grid-template-columns: 1fr;
 		gap: 1rem;
-	}
-
-	.city-sidebar {
-		gap: 0.75rem;
 	}
 
 	.city-sidebar-sticky {

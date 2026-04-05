@@ -12,6 +12,7 @@ import { db } from '../db';
 import { cities, listings } from '../db/schema';
 import { listingHasPhotosSql } from '../db/listing-photo-filter';
 import { and, asc, eq, gt, sql } from 'drizzle-orm';
+import { categoryIdFromSlug } from './category-ids';
 import { classifyListing } from './classifier';
 import * as dotenv from 'dotenv';
 import { resolve } from 'path';
@@ -19,19 +20,6 @@ import { resolve } from 'path';
 dotenv.config({ path: resolve(process.cwd(), '.env') });
 
 const BATCH_SIZE = 50;
-
-const SLUG_TO_ID: Record<string, number> = {
-	electronics: 1,
-	clothing: 2,
-	auto: 3,
-	furniture: 4,
-	realestate: 5,
-	services: 6,
-	kids: 7,
-	sport: 8,
-	other: 9,
-	animals: 37
-};
 
 async function updateListingsCounts() {
 	const allCities = await db.query.cities.findMany();
@@ -97,7 +85,7 @@ async function main() {
 				continue;
 			}
 
-			const newCategoryId = SLUG_TO_ID[result.categorySlug] ?? 9;
+			const newCategoryId = categoryIdFromSlug(result.categorySlug);
 			if (listing.categoryId !== newCategoryId) {
 				if (!DRY_RUN) {
 					await db

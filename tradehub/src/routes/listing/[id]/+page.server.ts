@@ -92,7 +92,14 @@ export const actions: Actions = {
 		const formData = await request.formData();
 		const reason = String(formData.get('reason') ?? '').trim();
 		const details = String(formData.get('details') ?? '').trim();
-		const allowedReasons = new Set(['spam', 'fraud', 'prohibited', 'duplicate', 'other']);
+		const allowedReasons = new Set([
+			'spam',
+			'fraud',
+			'prohibited',
+			'duplicate',
+			'wrong_category',
+			'other'
+		]);
 		if (!allowedReasons.has(reason)) {
 			return fail(400, { success: false, error: 'Выберите причину жалобы.' });
 		}
@@ -111,7 +118,32 @@ export const actions: Actions = {
 				details: details || null,
 				status: 'open'
 			});
-			return { success: true, message: 'Жалоба отправлена. Спасибо!' };
+
+			if (reason === 'wrong_category' && listing.status === 'active') {
+				const { classifyListing } = await import('$lib/server/telegram/classifier');
+				const { categoryIdFromSlug } = await import('$lib/server/telegram/category-ids');
+				const text = [listing.title, listing.description ?? ''].filter(Boolean).join('\n');
+				try {
+					const classified = await classifyListing(text);
+					if (classified.isListing) {
+						const nextId = categoryIdFromSlug(classified.categorySlug);
+						if (nextId !== listing.categoryId) {
+							await db.update(listings).set({ categoryId: nextId }).where(eq(listings.id, id));
+						}
+					}
+				} catch (e) {
+					console.error('[listing][report] wrong_category reclassify failed', e);
+				}
+			}
+
+			const recategorized =
+				reason === 'wrong_category' && listing.status === 'active';
+			return {
+				success: true,
+				message: recategorized
+					? 'Жалоба отправлена. Категория объявления пересчитана автоматически.'
+					: 'Жалоба отправлена. Спасибо!'
+			};
 		} catch (e) {
 			console.error('[listing][report] error', e);
 			return fail(500, { success: false, error: 'Не удалось отправить жалобу.' });

@@ -483,6 +483,7 @@
 					<option value="fraud">{$_('report_fraud')}</option>
 					<option value="prohibited">{$_('report_prohibited')}</option>
 					<option value="duplicate">{$_('report_duplicate')}</option>
+					<option value="wrong_category">{$_('report_wrong_category')}</option>
 					<option value="other">{$_('report_other')}</option>
 				</select>
 				<textarea name="details" rows="3" placeholder={$_('report_comment')} class="report-textarea"></textarea>

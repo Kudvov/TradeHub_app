@@ -33,6 +33,7 @@
   "report_fraud": "Fraud",
   "report_prohibited": "Prohibited content",
   "report_duplicate": "Duplicate",
+  "report_wrong_category": "Wrong category",
   "report_other": "Other",
   "report_comment": "Comment (optional)",
   "report_submit": "Submit report",
