@@ -64,6 +64,14 @@ else
 fi
 
 echo "→ Сборка архива из $ROOT ..."
+# --warning=no-unknown-keyword подавляет предупреждения macOS xattr в GNU tar (CI/Linux)
+# На macOS bsdtar предупреждения тоже безвредны, но не влияют на exit code
+tar --exclude='tradehub/node_modules' \
+	--exclude='tradehub/.svelte-kit' \
+	--exclude='tradehub/build' \
+	--warning=no-unknown-keyword \
+	-czf "$ARCHIVE" \
+	-C "$ROOT" tradehub 2>/dev/null || \
 tar --exclude='tradehub/node_modules' \
 	--exclude='tradehub/.svelte-kit' \
 	--exclude='tradehub/build' \
