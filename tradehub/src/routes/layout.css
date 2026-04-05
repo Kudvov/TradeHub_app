@@ -1,11 +1,11 @@
 .app-root {
-	min-height: 100dvh;
+	min-height: var(--viewport-stable-height);
 	display: flex;
 	flex-direction: column;
 }
 
 .app-root--home {
-	min-height: 100dvh;
+	min-height: var(--viewport-stable-height);
 	height: auto;
 	max-height: none;
 	overflow-x: hidden;
@@ -60,7 +60,9 @@
 	position: relative;
 	z-index: 1;
 	flex: 1;
-	min-height: calc(100dvh - 64px - 3.5rem);
+	min-height: calc(
+		var(--viewport-stable-height) - var(--sticky-header-height) - var(--sticky-search-stripe)
+	);
 }
 
 .main-content--home {

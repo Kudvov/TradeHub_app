@@ -32,23 +32,35 @@
 	font-size: 0.8125rem;
 	font-weight: 500;
 	line-height: 1.2;
-	color: var(--text-secondary);
-	background-color: var(--bg-card);
-	border: 1px solid var(--border);
+	color: var(--text-primary);
+	background-color: var(--gray-100);
+	border: 1px solid var(--gray-200);
 	border-radius: var(--radius-md);
-	box-shadow: var(--shadow-sm);
+	box-shadow: none;
 	transition:
 		background var(--transition-fast),
 		border-color var(--transition-fast),
-		color var(--transition-fast),
-		box-shadow var(--transition-fast);
+		color var(--transition-fast);
 }
 
 .period-select:hover {
 	color: var(--text-primary);
-	border-color: var(--border-hover);
-	background-color: var(--bg-card-hover);
-	box-shadow: var(--shadow-md);
+	border-color: var(--gray-400);
+	background-color: var(--gray-300);
+	box-shadow: none;
+}
+
+:root.dark .period-select {
+	color: var(--text-secondary);
+	background-color: var(--gray-800);
+	border-color: color-mix(in srgb, var(--gray-600) 55%, var(--gray-800));
+}
+
+:root.dark .period-select:hover {
+	/* чуть темнее прежнего gray-700 — ближе к фону карточки */
+	background-color: color-mix(in srgb, var(--gray-800) 58%, var(--gray-700));
+	border-color: var(--gray-600);
+	color: var(--text-primary);
 }
 
 .period-select:focus {

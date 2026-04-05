@@ -15,7 +15,9 @@
 .city-sidebar {
 	position: sticky;
 	top: calc(var(--sticky-header-height) + var(--sticky-search-stripe));
-	max-height: calc(100dvh - var(--sticky-header-height) - var(--sticky-search-stripe) - 0.75rem);
+	max-height: calc(
+		var(--viewport-stable-height) - var(--sticky-header-height) - var(--sticky-search-stripe) - 0.75rem
+	);
 	overflow-x: hidden;
 	overflow-y: auto;
 	overscroll-behavior: contain;
@@ -81,8 +83,9 @@
 }
 
 .city-sidebar .filter-chip.active {
-	background: var(--bg-card);
-	border-color: var(--border);
+	/* Темнее ховера (--bg-card-hover), без рамки */
+	background: color-mix(in srgb, var(--text-primary) 20%, var(--bg-card-hover));
+	border-color: transparent;
 	color: var(--text-primary);
 }
 

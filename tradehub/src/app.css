@@ -88,7 +88,9 @@
 
 	/* Липкая шапка + полоса поиска (layout.css); сайдбар города — city-page.css */
 	--sticky-header-height: 64px;
-	--sticky-search-stripe: calc(0.35rem + 0.45rem + 3.125rem);
+	--sticky-search-stripe: calc(0.35rem + 0.45rem + 3.125rem + 1px);
+	/* Стабильная высота вьюпорта: 100dvh прыгает при скрытии адресной строки на мобильных */
+	--viewport-stable-height: 100vh;
 
 	color-scheme: light;
 }
@@ -96,6 +98,12 @@
 @media (max-width: 480px) {
 	:root {
 		--sticky-header-height: 96px;
+	}
+}
+
+@supports (height: 100svh) {
+	:root {
+		--viewport-stable-height: 100svh;
 	}
 }
 
@@ -166,6 +174,8 @@ html {
 	scroll-behavior: smooth;
 	/* clip вместо hidden — иначе ломается position:sticky у потомков */
 	overflow-x: clip;
+	/* Резерв под вертикальный скроллбар — без сдвига ширины при появлении */
+	scrollbar-gutter: stable;
 }
 
 body {
@@ -173,7 +183,7 @@ body {
 	background: var(--bg-primary);
 	color: var(--text-primary);
 	line-height: 1.6;
-	min-height: 100dvh;
+	min-height: var(--viewport-stable-height);
 	overflow-x: clip;
 	transition: background var(--transition-base), color var(--transition-base);
 }
