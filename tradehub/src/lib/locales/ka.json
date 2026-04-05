@@ -81,5 +81,7 @@
   "price_from": "დან",
   "price_to": "მდე",
   "apply": "OK",
+  "price_from_to": "ფასი",
+  "period_label": "პერიოდი",
   "reset_filter": "ფილტრის გასუფთავება"
 }

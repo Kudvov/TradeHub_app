@@ -81,5 +81,7 @@
   "price_from": "от",
   "price_to": "до",
   "apply": "OK",
+  "price_from_to": "Цена",
+  "period_label": "Период",
   "reset_filter": "Сбросить фильтр"
 }

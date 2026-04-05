@@ -81,5 +81,7 @@
   "price_from": "from",
   "price_to": "to",
   "apply": "OK",
+  "price_from_to": "Price",
+  "period_label": "Period",
   "reset_filter": "Reset filter"
 }

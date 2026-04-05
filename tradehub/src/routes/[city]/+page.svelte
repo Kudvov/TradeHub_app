@@ -2,7 +2,7 @@
 	import './city-page.css';
 	import CategoryFilter from '$lib/components/CategoryFilter.svelte';
 	import PeriodSelect from '$lib/components/PeriodSelect.svelte';
-import ListingCard from '$lib/components/ListingCard.svelte';
+	import ListingCard from '$lib/components/ListingCard.svelte';
 	import type { ListingPeriodSlug } from '$lib/listing-period';
 	import { goto } from '$app/navigation';
 	import { _ } from 'svelte-i18n';
@@ -18,14 +18,14 @@ import ListingCard from '$lib/components/ListingCard.svelte';
 		const cat = params.category ?? data.filters.categorySlug;
 		const q = params.q ?? data.filters.query;
 		const period = params.period !== undefined ? params.period : data.filters.periodSlug;
-		const page = params.page ?? 1;
+		const pg = params.page ?? 1;
 		const priceMin = 'priceMin' in params ? params.priceMin : data.filters.priceMin;
 		const priceMax = 'priceMax' in params ? params.priceMax : data.filters.priceMax;
 
 		if (cat) searchParams.set('category', cat);
 		if (q) searchParams.set('q', q);
 		if (period) searchParams.set('period', period);
-		if (page > 1) searchParams.set('page', String(page));
+		if (pg > 1) searchParams.set('page', String(pg));
 		if (priceMin !== null && priceMin !== undefined) searchParams.set('priceMin', String(priceMin));
 		if (priceMax !== null && priceMax !== undefined) searchParams.set('priceMax', String(priceMax));
 
@@ -41,23 +41,20 @@ import ListingCard from '$lib/components/ListingCard.svelte';
 		goto(buildUrl({ period: slug, page: 1 }));
 	}
 
-function handlePage(page: number) {
-		goto(buildUrl({ page }));
+	function handlePage(pg: number) {
+		goto(buildUrl({ page: pg }));
 	}
 
 	function getPaginationItems(currentPage: number, totalPages: number): PaginationItem[] {
 		if (totalPages <= 7) {
 			return Array.from({ length: totalPages }, (_, i) => i + 1);
 		}
-
 		const items: PaginationItem[] = [1];
 		const start = Math.max(2, currentPage - 1);
 		const end = Math.min(totalPages - 1, currentPage + 1);
-
 		if (start > 2) items.push('...');
 		for (let p = start; p <= end; p++) items.push(p);
 		if (end < totalPages - 1) items.push('...');
-
 		items.push(totalPages);
 		return items;
 	}
@@ -67,12 +64,10 @@ function handlePage(page: number) {
 	<title>{data.city.name} — объявления | teleposter</title>
 	<meta name="description" content="Объявления в {data.city.name}: электроника, одежда, авто, мебель и другие товары из Telegram-барахолок." />
 	<link rel="canonical" href="{$page.url.origin}/{data.city.slug}" />
-	<!-- hreflang -->
 	<link rel="alternate" hreflang="ru" href="{$page.url.origin}/{data.city.slug}" />
 	<link rel="alternate" hreflang="en" href="{$page.url.origin}/{data.city.slug}" />
 	<link rel="alternate" hreflang="ka" href="{$page.url.origin}/{data.city.slug}" />
 	<link rel="alternate" hreflang="x-default" href="{$page.url.origin}/{data.city.slug}" />
-	<!-- Open Graph -->
 	<meta property="og:type" content="website" />
 	<meta property="og:site_name" content="teleposter" />
 	<meta property="og:url" content="{$page.url.origin}/{data.city.slug}" />
@@ -80,7 +75,6 @@ function handlePage(page: number) {
 	<meta property="og:description" content="Объявления в {data.city.name}: электроника, одежда, авто, мебель и другие товары из Telegram-барахолок." />
 	<meta property="og:image" content="{$page.url.origin}/og-image.png" />
 	<meta property="og:locale" content="ru_RU" />
-	<!-- Twitter Card -->
 	<meta name="twitter:card" content="summary_large_image" />
 	<meta name="twitter:title" content="{data.city.name} — объявления | teleposter" />
 	<meta name="twitter:description" content="Объявления в {data.city.name}: электроника, одежда, авто, мебель и другие товары из Telegram-барахолок." />
@@ -89,28 +83,30 @@ function handlePage(page: number) {
 
 <section class="city-page">
 	<div class="container">
-		<!-- City header -->
-		<div class="city-header fade-in">
-			<div class="city-header-info">
-				<h1 class="city-page-title">{$_(`city_${data.city.slug}`) || data.city.name}</h1>
-				<p class="city-page-count text-secondary">
-					{data.total}
-					{data.total === 1 ? $_('listings_count_one') : data.total < 5 ? $_('listings_count_few') : $_('listings_count_many')}
-				</p>
-			</div>
-		</div>
+		<div class="city-layout">
 
-		<!-- Categories + period (dropdown) -->
-		<div class="city-filters">
-			<div class="city-filters-row">
-				<div class="city-filters-categories">
+			<!-- LEFT SIDEBAR: filters -->
+			<aside class="city-sidebar">
+				<div class="sidebar-header">
+					<h1 class="city-page-title">{$_(`city_${data.city.slug}`) || data.city.name}</h1>
+					<p class="city-page-count text-secondary">
+						{data.total}
+						{data.total === 1 ? $_('listings_count_one') : data.total < 5 ? $_('listings_count_few') : $_('listings_count_many')}
+					</p>
+				</div>
+
+				<!-- Categories -->
+				<div class="sidebar-section">
 					<CategoryFilter
 						categories={data.categories}
 						activeSlug={data.filters.categorySlug}
 						onSelect={handleCategorySelect}
 					/>
 				</div>
-				<div class="city-filters-right">
+
+				<!-- Price filter -->
+				<div class="sidebar-section">
+					<p class="sidebar-label">{$_('price_from_to')}</p>
 					<form method="GET" action="/{data.city.slug}" class="price-filter-form">
 						{#if data.filters.categorySlug}<input type="hidden" name="category" value={data.filters.categorySlug} />{/if}
 						{#if data.filters.query}<input type="hidden" name="q" value={data.filters.query} />{/if}
@@ -125,60 +121,67 @@ function handlePage(page: number) {
 							{/if}
 						</div>
 					</form>
+				</div>
+
+				<!-- Period -->
+				<div class="sidebar-section">
+					<p class="sidebar-label">{$_('period_label')}</p>
 					<PeriodSelect activePeriod={data.filters.periodSlug} onSelect={handlePeriodSelect} />
 				</div>
-			</div>
-		</div>
+			</aside>
 
-		<!-- Listings grid -->
-		{#if data.listings.length > 0}
-			<div class="grid-listings">
-				{#each data.listings as listing, i (listing.id)}
-					<div class="fade-in" style="animation-delay: {i * 50}ms">
-						<ListingCard {listing} />
+			<!-- RIGHT CONTENT: listings -->
+			<main class="city-content">
+				{#if data.listings.length > 0}
+					<div class="grid-listings">
+						{#each data.listings as listing, i (listing.id)}
+							<div class="fade-in" style="animation-delay: {i * 50}ms">
+								<ListingCard {listing} />
+							</div>
+						{/each}
 					</div>
-				{/each}
-			</div>
-		{:else}
-			<div class="empty-state fade-in">
-				<span class="empty-icon">🔍</span>
-				<h3>{$_('listings_not_found')}</h3>
-				<p class="text-secondary">{$_('listings_not_found_hint')}</p>
-			</div>
-		{/if}
-
-		<!-- Pagination -->
-		{#if data.totalPages > 1}
-			<nav class="pagination" id="pagination">
-				{#if data.page > 1}
-					<button class="btn btn-secondary btn-sm" onclick={() => handlePage(data.page - 1)}>
-						{$_('pagination_prev')}
-					</button>
+				{:else}
+					<div class="empty-state fade-in">
+						<span class="empty-icon">🔍</span>
+						<h3>{$_('listings_not_found')}</h3>
+						<p class="text-secondary">{$_('listings_not_found_hint')}</p>
+					</div>
 				{/if}
 
-				<div class="pagination-pages">
-					{#each getPaginationItems(data.page, data.totalPages) as item}
-						{#if item === '...'}
-							<span class="pagination-ellipsis">…</span>
-						{:else}
-							<button
-								class="pagination-page btn btn-sm"
-								class:active={item === data.page}
-								onclick={() => handlePage(item)}
-								aria-current={item === data.page ? 'page' : undefined}
-							>
-								{item}
+				{#if data.totalPages > 1}
+					<nav class="pagination" id="pagination">
+						{#if data.page > 1}
+							<button class="btn btn-secondary btn-sm" onclick={() => handlePage(data.page - 1)}>
+								{$_('pagination_prev')}
 							</button>
 						{/if}
-					{/each}
-				</div>
 
-				{#if data.page < data.totalPages}
-					<button class="btn btn-secondary btn-sm" onclick={() => handlePage(data.page + 1)}>
-						{$_('pagination_next')}
-					</button>
+						<div class="pagination-pages">
+							{#each getPaginationItems(data.page, data.totalPages) as item}
+								{#if item === '...'}
+									<span class="pagination-ellipsis">…</span>
+								{:else}
+									<button
+										class="pagination-page btn btn-sm"
+										class:active={item === data.page}
+										onclick={() => handlePage(item)}
+										aria-current={item === data.page ? 'page' : undefined}
+									>
+										{item}
+									</button>
+								{/if}
+							{/each}
+						</div>
+
+						{#if data.page < data.totalPages}
+							<button class="btn btn-secondary btn-sm" onclick={() => handlePage(data.page + 1)}>
+								{$_('pagination_next')}
+							</button>
+						{/if}
+					</nav>
 				{/if}
-			</nav>
-		{/if}
+			</main>
+
+		</div>
 	</div>
 </section>
