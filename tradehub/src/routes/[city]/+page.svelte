@@ -95,6 +95,12 @@
 					</p>
 				</div>
 
+				<!-- Period -->
+				<div class="sidebar-section">
+					<p class="sidebar-label">{$_('period_label')}</p>
+					<PeriodSelect activePeriod={data.filters.periodSlug} onSelect={handlePeriodSelect} />
+				</div>
+
 				<!-- Categories -->
 				<div class="sidebar-section">
 					<CategoryFilter
@@ -121,12 +127,6 @@
 							{/if}
 						</div>
 					</form>
-				</div>
-
-				<!-- Period -->
-				<div class="sidebar-section">
-					<p class="sidebar-label">{$_('period_label')}</p>
-					<PeriodSelect activePeriod={data.filters.periodSlug} onSelect={handlePeriodSelect} />
 				</div>
 			</aside>
 

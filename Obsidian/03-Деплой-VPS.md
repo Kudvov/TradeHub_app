@@ -1,47 +1,65 @@
 # Деплой (VPS)
 
-## Скрипт
+## CI/CD — автодеплой (основной способ)
 
-Из корня репозитория (родитель `tradehub/`):
+GitHub Actions: `.github/workflows/deploy.yml` — запускается на push в `main`.
+
+Шаги:
+1. `npm ci`
+2. `npm run check` (svelte-check, 0 errors)
+3. `npm test` (43 unit-теста)
+4. `bash tradehub/scripts/deploy-to-server.sh`
+
+**Секреты GitHub** (Settings → Secrets → Actions):
+
+| Секрет | Значение |
+|--------|---------|
+| `DEPLOY_HOST` | `root@<IP сервера>` |
+| `DEPLOY_SSH_KEY` | Приватный SSH-ключ (ed25519, однострочный) |
+
+## Деплой вручную (с локальной машины)
 
 ```bash
-# опционально: tradehub/scripts/deploy.env (не коммитится) — DEPLOY_HOST, DEPLOY_SSH_KEY, DEPLOY_SSH_PORT и т.д.
-cd /path/to/TradeHub_app && set -a && source tradehub/scripts/deploy.env && set +a && bash tradehub/scripts/deploy-to-server.sh
+cd /path/to/TradeHub_app
+set -a && source tradehub/scripts/deploy.env && set +a
+bash tradehub/scripts/deploy-to-server.sh
 ```
 
-Или без файла: `DEPLOY_HOST=root@ВАШ_IP DEPLOY_SSH_KEY=~/.ssh/ключ bash tradehub/scripts/deploy-to-server.sh`.
+Файл `tradehub/scripts/deploy.env` (не коммитится):
+```bash
+export DEPLOY_HOST=root@155.212.134.183
+export DEPLOY_SSH_KEY="$HOME/.ssh/tradehub_server"
+```
 
-**Переменные** (см. комментарии в `deploy-to-server.sh` и `deploy-env.example`):
+## Что делает deploy-to-server.sh
 
-| Переменная | Назначение |
-|------------|------------|
-| `DEPLOY_HOST` | `user@host` (значение по умолчанию см. в `deploy-to-server.sh` — задай `DEPLOY_HOST` для своего сервера) |
-| `DEPLOY_SSH_PORT` | Порт SSH (по умолчанию 22) |
-| `DEPLOY_SSH_KEY` | Путь к приватному ключу |
-| `DEPLOY_SSH_KEY_CONTENT` | Текст ключа (CI / секреты Cursor) |
-| `DEPLOY_SSH_BATCH=no` | Если нужен интерактивный ввод пароля SSH вместо ключа |
+1. Упаковывает `tradehub/` в архив tar (без `node_modules`, `.svelte-kit`, `build`).
+2. Копирует на сервер по SCP.
+3. Запускает `remote-deploy.sh` на сервере:
+   - Бэкап `.env` → `/root/teleposter.env.backup`
+   - `rm -rf /opt/teleposter` + распаковка
+   - `npm install && npm run build`
+   - `drizzle-kit push --force` (если `DATABASE_URL` в `.env`)
+   - Установка systemd unit-файлов
+   - `systemctl restart teleposter.service`
 
-Скрипт:
-
-1. Упаковывает каталог `tradehub` в архив (`tar`). На macOS возможны предупреждения `LIBARCHIVE.xattr...` — на содержимое деплоя не влияют; при желании: `export COPYFILE_DISABLE=1` перед запуском.
-2. Копирует на сервер по SSH (`scp`).
-3. На сервере выполняет `tradehub/scripts/remote-deploy.sh`: распаковка в `/opt`, переименование **`/opt/tradehub` → `/opt/teleposter`**, бэкап старого `.env` в **`/root/teleposter.env.backup`**, затем `npm install`, `npm run build`, при наличии `DATABASE_URL` — `db:push`, установка unit-файлов systemd, перезапуск сервисов.
+> **Важно:** macOS создаёт `xattr` атрибуты в архивах — в скрипте они подавляются, на деплой не влияют.
 
 ## Пути на сервере
 
 - Приложение: **`/opt/teleposter`**
-- Конфиг окружения: **`/opt/teleposter/.env`** (между выкладками подставляется из бэкапа)
-- Nginx: примеры в репозитории — `teleposter.example.conf` (старт), **`barakali.online.conf`** (домен + редирект www), прокси на `127.0.0.1:3000`
+- Конфиг: **`/opt/teleposter/.env`**
+- Nginx конфиги: `teleposter.example.conf`, `barakali.online.conf`
 
-## Systemd
+## Systemd сервисы
 
-- **`teleposter.service`** — основной Node-процесс SvelteKit.
-- **`teleposter-parser.timer`** + **`teleposter-parser.service`** — периодический запуск `npm run parser:sync` с блокировкой `flock`, чтобы не было параллельных прогонов.
+| Unit | Назначение |
+|------|-----------|
+| `teleposter.service` | Основной Node-процесс SvelteKit (порт 3000) |
+| `teleposter-parser.timer/service` | Парсер Telegram (каждую минуту) |
+| `teleposter-checker.timer/service` | Чекер актуальности объявлений (раз в час) |
+| `teleposter-dedupe.timer/service` | Дедупликация (раз в 12 часов) |
 
-Подробности: **`tradehub/deploy/BEGET-VPS.md`** (DNS, HTTPS Let’s Encrypt, таблица типичных проблем). Юниты: `tradehub/deploy/systemd/*.service`.
+Подробности: **`tradehub/deploy/BEGET-VPS.md`**.
 
-## Таймаут парсера
-
-В unit-файле парсера задан **`TimeoutStartSec`** (несколько часов), иначе длинный прогон обрезается по `systemd`.
-
-← [[Teleposter]] · см. [[04-Парсер-Telegram]]
+← [[Teleposter]] · [[04-Парсер-Telegram]]

@@ -2,12 +2,12 @@
 
 Сайт объявлений (Грузия: Батуми, Тбилиси и др.) с парсингом публичных постов из Telegram-групп через embed-страницы `t.me`.
 
-**Исходный код:** папка `tradehub/` в этом репозитории.  
+**Исходный код:** папка `tradehub/` в этом репозитории.
 **Продакшен:** приложение в `/opt/teleposter` на VPS, Node + nginx, systemd.
 
 Эта папка `Obsidian/` — сжатая документация для vault; развёрнутый гайд по VPS: **`tradehub/deploy/BEGET-VPS.md`**.
 
-_Обновлено: 2026-04._
+_Обновлено: 2026-04-05._
 
 ---
 
@@ -17,7 +17,7 @@ _Обновлено: 2026-04._
 |------|---------|
 | Обзор и цели | [[01-Обзор-проекта]] |
 | Стек, каталоги | [[02-Стек-и-структура]] |
-| VPS, nginx, systemd | [[03-Деплой-VPS]] |
+| VPS, nginx, systemd, CI/CD | [[03-Деплой-VPS]] |
 | `parser:sync`, journalctl | [[04-Парсер-Telegram]] |
 | `/admin/groups` | [[05-Админка]] |
 | Drizzle, таблицы | [[06-База-данных]] |
@@ -39,9 +39,20 @@ npm run dev
 
 ---
 
+## Деплой вручную (с локальной машины)
+
+```bash
+cd /path/to/TradeHub_app
+set -a && source tradehub/scripts/deploy.env && set +a
+bash tradehub/scripts/deploy-to-server.sh
+```
+
+---
+
 ## Ссылки на репозиторий
 
 - Деплой: `tradehub/scripts/deploy-to-server.sh` · пример переменных: `tradehub/scripts/deploy-env.example`
+- CI/CD: `.github/workflows/deploy.yml` — автодеплой на push в `main`
 - Полный чеклист VPS (DNS, HTTPS, типичные проблемы): `tradehub/deploy/BEGET-VPS.md`
-- Unit-файлы: `tradehub/deploy/systemd/` (`teleposter.service`, `teleposter-parser.service`, `teleposter-parser.timer`)
-- Nginx: `tradehub/deploy/nginx/` (`teleposter.example.conf`, `barakali.online.conf`)
+- Unit-файлы: `tradehub/deploy/systemd/`
+- Nginx: `tradehub/deploy/nginx/`
