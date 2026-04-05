@@ -19,8 +19,12 @@ const RESERVED_TG_PATHS = new Set([
 	'login'
 ]);
 
-/** Модель для извлечения полей объявления (Google AI / Gemini API). */
-const GEMINI_EXTRACT_MODEL = 'gemini-2.0-flash';
+/** Модель для извлечения полей (Gemini API). gemini-2.0-flash недоступен новым ключам — см. GEMINI_MODEL. */
+function geminiModel(): string {
+	const m = process.env.GEMINI_MODEL?.trim();
+	if (m && /^[a-zA-Z0-9_.-]+$/.test(m)) return m;
+	return 'gemini-2.5-flash';
+}
 const GEMINI_EXTRACT_TIMEOUT_MS = 20_000;
 
 function normalizeGroupHandle(handle: string | undefined): string {
@@ -186,7 +190,7 @@ Context:
 Ad text (JSON-encoded string, parse it):
 ${adSnippet}`;
 
-	const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_EXTRACT_MODEL}:generateContent?key=${encodeURIComponent(apiKey)}`;
+	const url = `https://generativelanguage.googleapis.com/v1beta/models/${geminiModel()}:generateContent?key=${encodeURIComponent(apiKey)}`;
 	const controller = new AbortController();
 	const timeout = setTimeout(() => controller.abort(), GEMINI_EXTRACT_TIMEOUT_MS);
 

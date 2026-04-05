@@ -4,8 +4,12 @@
  */
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY ?? '';
-const GEMINI_URL =
-	'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
+
+function geminiModel(): string {
+	const m = process.env.GEMINI_MODEL?.trim();
+	if (m && /^[a-zA-Z0-9_.-]+$/.test(m)) return m;
+	return 'gemini-2.5-flash';
+}
 
 const CATEGORY_SLUGS = [
 	'electronics',
@@ -56,7 +60,8 @@ async function geminiClassify(text: string): Promise<string | null> {
 	if (!GEMINI_API_KEY) return null;
 
 	try {
-		const response = await fetch(`${GEMINI_URL}?key=${GEMINI_API_KEY}`, {
+		const url = `https://generativelanguage.googleapis.com/v1beta/models/${geminiModel()}:generateContent?key=${GEMINI_API_KEY}`;
+		const response = await fetch(url, {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({
