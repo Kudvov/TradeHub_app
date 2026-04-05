@@ -1,9 +1,11 @@
 /**
- * Прогоняет существующие активные объявления через AI-классификатор (Ollama).
+ * Прогоняет объявления через AI-классификатор (Gemini, см. classifier.ts).
  * - NOT_LISTING → status = 'filtered'
- * - listing     → обновляет categoryId
+ * - listing     → обновляет categoryId (status не трогаем, кроме фильтра)
  *
  * Запуск: npm run parser:ai-reclassify
+ * Только active (по умолчанию). Вся таблица listings:
+ *   AI_RECLASSIFY_ALL=1 npm run parser:ai-reclassify
  */
 
 import { db } from '../db';
@@ -45,8 +47,11 @@ async function updateListingsCounts() {
 
 async function main() {
 	const DRY_RUN = process.env.DRY_RUN === '1';
-	console.log(`🤖 AI-реклассификация${DRY_RUN ? ' (DRY RUN — изменений нет)' : ''}...`);
-	console.log('Символы: x=отфильтровано  c=категория изменена  .=без изменений  ?=ошибка Ollama\n');
+	const allRows = process.env.AI_RECLASSIFY_ALL === '1';
+	console.log(
+		`🤖 AI-реклассификация${allRows ? ' (все строки listings)' : ' (только active)'}${DRY_RUN ? ' — DRY RUN' : ''}...`
+	);
+	console.log('Символы: x=отфильтровано  c=категория изменена  .=без изменений  ?=ошибка API\n');
 
 	let lastId = 0;
 	let scanned = 0;
@@ -55,8 +60,9 @@ async function main() {
 	let errors = 0;
 
 	while (true) {
+		const whereClause = allRows ? gt(listings.id, lastId) : and(eq(listings.status, 'active'), gt(listings.id, lastId));
 		const batch = await db.query.listings.findMany({
-			where: and(eq(listings.status, 'active'), gt(listings.id, lastId)),
+			where: whereClause,
 			orderBy: [asc(listings.id)],
 			limit: BATCH_SIZE,
 			columns: { id: true, title: true, description: true, categoryId: true }
@@ -115,7 +121,7 @@ async function main() {
 	console.log(`Проверено:            ${scanned}`);
 	console.log(`Отфильтровано (NOT):  ${filtered}`);
 	console.log(`Категория обновлена:  ${recategorized}`);
-	console.log(`Ошибки Ollama:        ${errors}`);
+	console.log(`Ошибки API:           ${errors}`);
 	process.exit(0);
 }
 
