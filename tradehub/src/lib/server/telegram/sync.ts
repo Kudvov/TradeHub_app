@@ -11,6 +11,7 @@ import {
 	TITLE_SIMILARITY_THRESHOLD
 } from './listing-dedupe';
 import { refreshRecentListingImages } from './refresh-images';
+import { applyTypografToExtracted } from '../typograf-listing';
 import * as dotenv from 'dotenv';
 import { resolve } from 'path';
 
@@ -102,6 +103,7 @@ async function syncGroup(
 
 			const parsed = outcome.data;
 			consecutiveErrors = 0;
+			applyTypografToExtracted(parsed.extracted);
 
 			const msgDateStr = parsed.date?.toDateString() ?? null;
 			const isAlbumContinuation =

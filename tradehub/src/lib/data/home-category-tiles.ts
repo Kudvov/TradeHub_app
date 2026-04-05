@@ -1,3 +1,5 @@
+import { typografUiString } from '$lib/i18n/typograf-messages';
+
 /** Плитки на главной: подписи как на маркетплейсах; slug — из БД, иначе только поиск `q`. */
 export type HomeCategoryTile = {
 	label: string;
@@ -6,7 +8,7 @@ export type HomeCategoryTile = {
 	searchQuery?: string;
 };
 
-export const HOME_CATEGORY_TILES: HomeCategoryTile[] = [
+const HOME_CATEGORY_TILES_RAW: HomeCategoryTile[] = [
 	{ label: 'Авто', emoji: '🚗', categorySlug: 'auto' },
 	{ label: 'Недвижимость', emoji: '🏢', categorySlug: 'realestate' },
 	{ label: 'Электроника', emoji: '📱', categorySlug: 'electronics' },
@@ -17,6 +19,11 @@ export const HOME_CATEGORY_TILES: HomeCategoryTile[] = [
 	{ label: 'Хобби и спорт', emoji: '🛼', categorySlug: 'sport' },
 	{ label: 'Животные', emoji: '🐾', categorySlug: 'animals' }
 ];
+
+export const HOME_CATEGORY_TILES: HomeCategoryTile[] = HOME_CATEGORY_TILES_RAW.map((t) => ({
+	...t,
+	label: typografUiString('ru', t.label)
+}));
 
 export function homeCategoryTileHref(citySlug: string, tile: HomeCategoryTile): string {
 	const params = new URLSearchParams();
