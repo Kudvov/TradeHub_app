@@ -1,15 +1,11 @@
 /**
- * AI-классификатор объявлений через Google Gemini 2.0 Flash.
+ * AI-классификатор объявлений через Google Gemini.
  * Один запрос = фильтр спама + категория.
  */
 
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY ?? '';
+import { resolveGeminiModel } from './gemini-model';
 
-function geminiModel(): string {
-	const m = process.env.GEMINI_MODEL?.trim();
-	if (m && /^[a-zA-Z0-9_.-]+$/.test(m)) return m;
-	return 'gemini-2.5-flash';
-}
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY ?? '';
 
 const CATEGORY_SLUGS = [
 	'electronics',
@@ -60,7 +56,7 @@ async function geminiClassify(text: string): Promise<string | null> {
 	if (!GEMINI_API_KEY) return null;
 
 	try {
-		const url = `https://generativelanguage.googleapis.com/v1beta/models/${geminiModel()}:generateContent?key=${GEMINI_API_KEY}`;
+		const url = `https://generativelanguage.googleapis.com/v1beta/models/${resolveGeminiModel()}:generateContent?key=${GEMINI_API_KEY}`;
 		const response = await fetch(url, {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },

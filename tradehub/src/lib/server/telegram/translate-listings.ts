@@ -1,24 +1,25 @@
 /**
- * Переводит объявления на английский и грузинский через Claude Haiku (Anthropic API).
+ * Переводит объявления на английский и грузинский через Google Gemini API.
  * - Берёт объявления где title_en IS NULL (ещё не переведены)
  * - Сохраняет title_en, description_en, title_ka, description_ka
  *
  * Запуск: npm run parser:translate
  * Dry run: DRY_RUN=1 npm run parser:translate
+ *
+ * Требуется GEMINI_API_KEY; модель — GEMINI_MODEL (по умолчанию gemini-2.5-flash).
  */
 
-import Anthropic from '@anthropic-ai/sdk';
 import { db } from '../db';
 import { listings } from '../db/schema';
 import { and, asc, eq, gt, isNull } from 'drizzle-orm';
 import * as dotenv from 'dotenv';
 import { resolve } from 'path';
+import { resolveGeminiModel } from './gemini-model';
 
 dotenv.config({ path: resolve(process.cwd(), '.env') });
 
 const BATCH_SIZE = 20;
-
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+const TRANSLATE_TIMEOUT_MS = 60_000;
 
 interface TranslateResult {
 	title_en: string;
@@ -27,49 +28,113 @@ interface TranslateResult {
 	description_ka: string | null;
 }
 
-async function translateListing(
-	title: string,
-	description: string | null
-): Promise<TranslateResult | null> {
-	const text = description ? `Title: ${title}\nDescription: ${description}` : `Title: ${title}`;
-
+function parseJsonObject(raw: string): Record<string, unknown> | null {
+	const trimmed = raw.trim();
+	const jsonMatch = trimmed.match(/\{[\s\S]*\}/);
+	if (!jsonMatch) return null;
 	try {
-		const message = await client.messages.create({
-			model: 'claude-haiku-4-5',
-			max_tokens: 2048,
-			messages: [
-				{
-					role: 'user',
-					content: `Translate the following classified ad to English and Georgian.
-Respond strictly as JSON with keys: title_en, description_en, title_ka, description_ka.
-If there is no description, use null for description fields.
-Do not add any explanation, only JSON.
-
-${text}`
-				}
-			]
-		});
-
-		const raw = message.content[0].type === 'text' ? message.content[0].text.trim() : null;
-		if (!raw) return null;
-
-		// Вырезаем JSON из ответа (на случай если модель добавит ```json ... ```)
-		const jsonMatch = raw.match(/\{[\s\S]*\}/);
-		if (!jsonMatch) return null;
-
-		return JSON.parse(jsonMatch[0]) as TranslateResult;
+		return JSON.parse(jsonMatch[0]) as Record<string, unknown>;
 	} catch {
 		return null;
 	}
 }
 
+function normalizeTranslateResult(data: Record<string, unknown>): TranslateResult | null {
+	const titleEn = typeof data.title_en === 'string' ? data.title_en.trim() : '';
+	const titleKa = typeof data.title_ka === 'string' ? data.title_ka.trim() : '';
+	if (!titleEn || !titleKa) return null;
+
+	const descEn =
+		data.description_en === null || data.description_en === undefined
+			? null
+			: typeof data.description_en === 'string'
+				? data.description_en.trim() || null
+				: null;
+	const descKa =
+		data.description_ka === null || data.description_ka === undefined
+			? null
+			: typeof data.description_ka === 'string'
+				? data.description_ka.trim() || null
+				: null;
+
+	return {
+		title_en: titleEn,
+		description_en: descEn,
+		title_ka: titleKa,
+		description_ka: descKa
+	};
+}
+
+async function translateListing(
+	title: string,
+	description: string | null,
+	apiKey: string
+): Promise<TranslateResult | null> {
+	const payload = JSON.stringify({
+		title,
+		description: description ?? null
+	});
+
+	const prompt = `You translate classified ads for a marketplace in Georgia.
+
+Input is a JSON object with keys "title" and "description" (description may be null).
+Translate to English and Georgian. Preserve meaning; keep prices, phone numbers, and @usernames unchanged.
+
+Respond with ONLY a JSON object and these exact keys:
+title_en, description_en, title_ka, description_ka
+Use null for description_en and description_ka when description was null or empty.
+
+Input JSON:
+${payload}`;
+
+	const url = `https://generativelanguage.googleapis.com/v1beta/models/${resolveGeminiModel()}:generateContent?key=${encodeURIComponent(apiKey)}`;
+	const controller = new AbortController();
+	const timeout = setTimeout(() => controller.abort(), TRANSLATE_TIMEOUT_MS);
+
+	try {
+		const res = await fetch(url, {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			signal: controller.signal,
+			body: JSON.stringify({
+				contents: [{ role: 'user', parts: [{ text: prompt }] }],
+				generationConfig: {
+					temperature: 0.2,
+					maxOutputTokens: 2048,
+					responseMimeType: 'application/json'
+				}
+			})
+		});
+
+		if (!res.ok) return null;
+
+		const body = (await res.json()) as {
+			candidates?: { content?: { parts?: { text?: string }[] } }[];
+		};
+		const raw = body.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+		if (!raw) return null;
+
+		const parsed = parseJsonObject(raw);
+		if (!parsed) return null;
+		return normalizeTranslateResult(parsed);
+	} catch {
+		return null;
+	} finally {
+		clearTimeout(timeout);
+	}
+}
+
 async function main() {
 	const DRY_RUN = process.env.DRY_RUN === '1';
-	console.log(`🌍 Перевод объявлений через Claude Haiku${DRY_RUN ? ' (DRY RUN — изменений нет)' : ''}...`);
+	const apiKey = process.env.GEMINI_API_KEY?.trim() ?? '';
+
+	console.log(
+		`🌍 Перевод объявлений через Gemini (${resolveGeminiModel()})${DRY_RUN ? ' (DRY RUN — изменений нет)' : ''}...`
+	);
 	console.log('Символы: .=переведено  ?=ошибка API\n');
 
-	if (!process.env.ANTHROPIC_API_KEY) {
-		console.error('❌ ANTHROPIC_API_KEY не задан в .env');
+	if (!apiKey) {
+		console.error('❌ GEMINI_API_KEY не задан в .env');
 		process.exit(1);
 	}
 
@@ -90,7 +155,7 @@ async function main() {
 		for (const listing of batch) {
 			lastId = listing.id;
 
-			const result = await translateListing(listing.title, listing.description ?? null);
+			const result = await translateListing(listing.title, listing.description ?? null, apiKey);
 
 			if (!result) {
 				errors++;
